@@ -10,8 +10,5 @@ const firebaseConfig = {
   appId: "1:40454072780:web:dae8a38f9569a1ffbd569"
 };
 
-// Inițializează Firebase
 const app = initializeApp(firebaseConfig);
-
-// Inițializează Firestore (Baza de date) și o exportă pentru a fi folosită în proiect
 export const db = getFirestore(app);
