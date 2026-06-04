@@ -10,5 +10,8 @@ const firebaseConfig = {
   appId: "1:40454072780:web:dae8a38f9569a1ffbd569"
 };
 
+// Pornim serviciul Firebase
 const app = initializeApp(firebaseConfig);
+
+// AICI ESTE REZOLVAREA: Inițializăm și exportăm variabila 'db' pe care o caută aplicația
 export const db = getFirestore(app);
