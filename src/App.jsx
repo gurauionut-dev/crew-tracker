@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { db, saveChecked, saveApproval, listenChecked, listenApprovals } from "./firebase";
+import { db, saveChecked, saveApproval, listenChecked, listenApprovals, saveEventColor, listenEventColors } from "./firebase";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -255,8 +255,9 @@ export default function App() {
   const [calError,   setCalError]  = useState(null);
 
   // Firebase live state
-  const [checked,   setChecked]   = useState({});
-  const [approvals, setApprovals] = useState({});
+  const [checked,     setChecked]     = useState({});
+  const [approvals,   setApprovals]   = useState({});
+  const [eventColors, setEventColors] = useState({});
   const prevApprovals = useRef({});
   const prevChecked   = useRef({});
 
@@ -298,7 +299,8 @@ export default function App() {
       prevApprovals.current = data;
       setApprovals(data);
     });
-    return ()=>{ unsub1(); unsub2(); };
+    const unsub3 = listenEventColors(data => setEventColors(data));
+    return ()=>{ unsub1(); unsub2(); unsub3(); };
   },[user]);
 
   // Google Calendar fetch
@@ -402,7 +404,7 @@ export default function App() {
   if (user.isViewer&&tab!=="report") setTab("report");
 
   const pending = user.isChief?getPendingCount():0;
-  const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError};
+  const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
 
   return (
     <div style={{minHeight:"100dvh",background:"#111",display:"flex",flexDirection:"column"}}>
@@ -502,13 +504,29 @@ function LoginScreen({ onLogin }) {
 
 // ─── TODAY VIEW ───────────────────────────────────────────────────────────────
 
-function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecked, toggleMyAction, getApproval, getAmount, calcBonus, calcDayTotal, showToast, calLoading, calError }) {
+function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecked, toggleMyAction, getApproval, getAmount, calcBonus, calcDayTotal, showToast, calLoading, calError, eventColors, saveEventColor }) {
   const selEv   = selEvent?events.find(e=>e.id===selEvent):null;
   const myCheck = selEv?getChecked(user.id,selEv.id):{};
   const approval= selEv?getApproval(user.id,selEv.id):null;
   const isLocked= approval==="approved"||approval==="rejected";
   const myActions=getUserActions(user.id);
   const myTotal = selEv?Object.entries(myCheck).filter(([,v])=>v).reduce((s,[k])=>s+getAmount(user.id,selEv.id,k),0):0;
+  const [showColorPicker, setShowColorPicker] = useState(null); // eventId
+
+  const COLOR_PALETTE = [
+    "#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c",
+    "#3498db","#9b59b6","#e91e63","#ff5722","#607d8b",
+    "#795548","#00bcd4","#8bc34a","#ff9800","#9e9e9e",
+  ];
+
+  function getEvColor(ev) {
+    return eventColors[ev.originalId||ev.id] || ev.color || null;
+  }
+
+  async function handleColorSelect(ev, color) {
+    await saveEventColor(ev.originalId||ev.id, color);
+    setShowColorPicker(null);
+  }
 
   if (selEv) return (
     <div style={{padding:"16px 16px 0"}}>
@@ -516,9 +534,9 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
         ‹ <span>Înapoi</span>
       </button>
       <div style={{background:"#1a1a1a",borderRadius:16,marginBottom:12,border:"1px solid #2a2a2a",overflow:"hidden"}}>
-        {selEv.color&&<div style={{height:4,background:selEv.color}}/>}
+        {getEvColor(selEv)&&<div style={{height:4,background:getEvColor(selEv)}}/>}
         <div style={{padding:16}}>
-        <div style={{fontSize:16,fontWeight:600,color:selEv.color||"#e8e8e6",marginBottom:6}}>{selEv.title}</div>
+        <div style={{fontSize:16,fontWeight:600,color:getEvColor(selEv)||"#e8e8e6",marginBottom:6}}>{selEv.title}</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {selEv.isMultiDay&&<MultiDayPill dayIndex={selEv.dayIndex} totalDays={selEv.totalDays}/>}
           {selEv.location&&<span style={{fontSize:12,color:"#555"}}>📍 {selEv.location}</span>}
@@ -590,13 +608,16 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           const appr=getApproval(user.id,ev.id);
           const bonus=calcBonus(user.id,ev.id);
           return (
-            <div key={ev.id} onClick={()=>setSelEvent(ev.id)}
-              style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,overflow:"hidden",cursor:"pointer"}}>
-              {ev.color&&<div style={{height:3,background:ev.color,borderRadius:"16px 16px 0 0"}}/>}
-              <div style={{padding:"13px 16px"}}>
+            <div key={ev.id} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,overflow:"hidden",position:"relative"}}>
+              {getEvColor(ev)&&<div style={{height:4,background:getEvColor(ev),borderRadius:"16px 16px 0 0"}}/>}
+              <div style={{padding:"13px 16px"}} onClick={()=>setSelEvent(ev.id)}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                <span style={{fontSize:15,fontWeight:500,color:ev.color||"#e8e8e6",lineHeight:1.3}}>{ev.title}</span>
-                {ev.start&&<span style={{fontSize:11,color:"#555",whiteSpace:"nowrap",flexShrink:0}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
+                <span style={{fontSize:15,fontWeight:500,color:getEvColor(ev)||"#e8e8e6",lineHeight:1.3}}>{ev.title}</span>
+                <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+                  {ev.start&&<span style={{fontSize:11,color:"#555",whiteSpace:"nowrap"}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
+                  {user.isChief&&<button onClick={e=>{e.stopPropagation();setShowColorPicker(showColorPicker===ev.id?null:ev.id);}}
+                    style={{width:20,height:20,borderRadius:"50%",border:"2px solid #333",background:getEvColor(ev)||"#333",cursor:"pointer",flexShrink:0,padding:0}}/>}
+                </div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:6}}>
                 {ev.isMultiDay&&<MultiDayPill dayIndex={ev.dayIndex} totalDays={ev.totalDays}/>}
@@ -612,6 +633,19 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
               )}
               <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#333"}}>Bifează ›</span></div>
               </div>
+              {showColorPicker===ev.id&&(
+                <div style={{padding:"12px 14px",background:"#111",borderTop:"1px solid #222"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{fontSize:11,color:"#666",marginBottom:8}}>Alege culoarea evenimentului:</div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
+                    {COLOR_PALETTE.map(c=>(
+                      <button key={c} onClick={()=>handleColorSelect(ev,c)}
+                        style={{width:28,height:28,borderRadius:"50%",border:getEvColor(ev)===c?"3px solid #fff":"2px solid transparent",background:c,cursor:"pointer",padding:0,flexShrink:0}}/>
+                    ))}
+                    <button onClick={()=>handleColorSelect(ev,null)}
+                      style={{width:28,height:28,borderRadius:"50%",border:"2px solid #444",background:"transparent",cursor:"pointer",padding:0,fontSize:14,color:"#666",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

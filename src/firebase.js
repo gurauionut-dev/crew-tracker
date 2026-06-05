@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, where, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, setDoc, collection, onSnapshot, serverTimestamp } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBFE2W-kCKniS7xs7KSi7VhPi05oeOpa9A",
@@ -13,21 +13,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-// ─── DB HELPERS ───────────────────────────────────────────────────────────────
-
-// checked: { uid -> { eventId -> { actionKey -> bool } } }
 export async function saveChecked(uid, eventId, actions) {
   const ref = doc(db, "checked", `${uid}_${eventId}`);
   await setDoc(ref, { uid, eventId, actions, updatedAt: serverTimestamp() }, { merge: true });
 }
 
-// approvals: { uid -> { eventId -> { status, amounts } } }
 export async function saveApproval(uid, eventId, status, amounts) {
   const ref = doc(db, "approvals", `${uid}_${eventId}`);
   await setDoc(ref, { uid, eventId, status, amounts, updatedAt: serverTimestamp() }, { merge: true });
 }
 
-// Listen to all checked actions (live)
 export function listenChecked(callback) {
   return onSnapshot(collection(db, "checked"), snap => {
     const result = {};
@@ -40,7 +35,6 @@ export function listenChecked(callback) {
   });
 }
 
-// Listen to all approvals (live)
 export function listenApprovals(callback) {
   return onSnapshot(collection(db, "approvals"), snap => {
     const result = {};
@@ -53,8 +47,16 @@ export function listenApprovals(callback) {
   });
 }
 
-// Save notification token
-export async function saveNotificationToken(uid, token) {
-  const ref = doc(db, "tokens", uid);
-  await setDoc(ref, { uid, token, updatedAt: serverTimestamp() }, { merge: true });
+// Event colors — shared across all users
+export async function saveEventColor(originalId, color) {
+  const ref = doc(db, "eventColors", originalId);
+  await setDoc(ref, { color, updatedAt: serverTimestamp() });
+}
+
+export function listenEventColors(callback) {
+  return onSnapshot(collection(db, "eventColors"), snap => {
+    const result = {};
+    snap.forEach(d => { result[d.id] = d.data().color; });
+    callback(result);
+  });
 }
