@@ -107,7 +107,16 @@ function parseGCalEvents(items) {
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 
 async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors={}) {
-  const { jsPDF } = await import("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js");
+  // Load jsPDF via script tag if not already loaded
+  if (!window.jspdf) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
   const pageW=210, margin=14, colW=210-14*2;
   let y=0;
@@ -973,8 +982,16 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
   }
   const grandTotal = crew.reduce((s,m)=>s+getDetail(m.id).reduce((ss,d)=>ss+d.total,0),0);
 
-  function downloadReport() {
-    generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors||{});
+  const [pdfLoading, setPdfLoading] = useState(false);
+  async function downloadReport() {
+    setPdfLoading(true);
+    try {
+      await generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors||{});
+    } catch(e) {
+      console.error("PDF error:", e);
+      alert("Eroare la generarea PDF. Verifică conexiunea și încearcă din nou.");
+    }
+    setPdfLoading(false);
   }
 
   return (
@@ -1009,8 +1026,9 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
       )}
 
       {/* Download button */}
-      <button onClick={downloadReport} style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:14,fontWeight:500,cursor:"pointer",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        📄 Descarcă raport PDF
+      <button onClick={downloadReport} disabled={pdfLoading}
+        style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #2a2a2a",background:pdfLoading?"#222":"#1a1a1a",color:pdfLoading?"#555":"#e8e8e6",fontSize:14,fontWeight:500,cursor:pdfLoading?"default":"pointer",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        {pdfLoading ? "⏳ Se generează PDF..." : "📄 Descarcă raport PDF"}
       </button>
 
       {/* Member cards */}
