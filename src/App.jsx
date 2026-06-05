@@ -4,23 +4,24 @@ import { db, saveChecked, saveApproval, listenChecked, listenApprovals } from ".
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const ACTIONS = [
-  { key: "montaj",    label: "Montaj",    icon: "🔧" },
-  { key: "demontaj",  label: "Demontaj",  icon: "📦" },
-  { key: "operare",   label: "Operare",   icon: "🖥️"  },
-  { key: "condus",    label: "Condus",    icon: "🚐" },
-  { key: "deplasare", label: "Deplasare", icon: "🗺️"  },
-  { key: "asistenta", label: "Asistență", icon: "🎧" },
+  { key: "montaj",    label: "Montaj",      icon: "🔧" },
+  { key: "demontaj",  label: "Demontaj",    icon: "📦" },
+  { key: "operare",   label: "Operare",     icon: "🖥️"  },
+  { key: "condus",    label: "Condus x1",   icon: "🚐" },
+  { key: "condus2",   label: "Condus x2",   icon: "🚐🚐" },
+  { key: "deplasare", label: "Deplasare",   icon: "🗺️"  },
+  { key: "asistenta", label: "Asistență",   icon: "🎧" },
 ];
 
 const DEFAULT_BONUSES = {
-  montaj: 37.5, demontaj: 37.5, operare: 250, condus: 50, deplasare: 0, asistenta: 0,
+  montaj: 37.5, demontaj: 37.5, operare: 250, condus: 25, condus2: 50, deplasare: 0, asistenta: 0,
 };
 
 const USER_CONFIG = {
-  ionut:  { visibleActions: ["montaj","demontaj","operare","condus","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
-  daniel: { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],          bonuses: { ...DEFAULT_BONUSES, montaj: 50, demontaj: 50 } },
-  stefan: { visibleActions: ["montaj","demontaj","operare","condus","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
-  gabi:   { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],          bonuses: { ...DEFAULT_BONUSES } },
+  ionut:  { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
+  daniel: { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],                    bonuses: { ...DEFAULT_BONUSES, montaj: 50, demontaj: 50 } },
+  stefan: { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
+  gabi:   { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],                    bonuses: { ...DEFAULT_BONUSES } },
 };
 
 const TEAM = [
@@ -59,6 +60,21 @@ function parseDateLocal(str) {
   return new Date(str);
 }
 
+// Google Calendar color IDs → hex (matches Google's palette)
+const GCAL_COLORS = {
+  "1":  "#ac725e", // Tomato
+  "2":  "#d06b64", // Flamingo
+  "3":  "#f83a22", // Tangerine
+  "4":  "#fa573c", // Banana
+  "5":  "#ff7537", // Sage
+  "6":  "#ffad46", // Basil
+  "7":  "#42d692", // Peacock
+  "8":  "#16a765", // Blueberry
+  "9":  "#7bd148", // Lavender
+  "10": "#b3dc6c", // Grape
+  "11": "#fbe983", // Graphite
+};
+
 function parseGCalEvents(items) {
   const result = {};
   (items||[]).filter(ev=>ev.status!=="cancelled").forEach(ev=>{
@@ -77,9 +93,10 @@ function parseGCalEvents(items) {
         if (i===0) startTime=startD.toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"});
         if (i===totalDays-1) endTime=endD.toLocaleTimeString("ro-RO",{hour:"2-digit",minute:"2-digit"});
       }
+      const evColor = ev.colorId ? (GCAL_COLORS[ev.colorId]||null) : null;
       if (!result[dayKey]) result[dayKey]=[];
       if (!result[dayKey].find(e=>e.id===dayEventId))
-        result[dayKey].push({id:dayEventId,originalId:ev.id,title,location:loc,dayKey,start:startTime,end:endTime,dayIndex:i,totalDays,isMultiDay:totalDays>1});
+        result[dayKey].push({id:dayEventId,originalId:ev.id,title,location:loc,dayKey,start:startTime,end:endTime,dayIndex:i,totalDays,isMultiDay:totalDays>1,color:evColor});
     }
   });
   Object.keys(result).forEach(k=>result[k].sort((a,b)=>(a.start||"").localeCompare(b.start||"")));
@@ -341,7 +358,8 @@ export default function App() {
 
   const getChecked  = (uid,eid)    => checked[uid]?.[eid]||{};
   const getApproval = (uid,eid)    => approvals[uid]?.[eid]?.status??null;
-  const getAmount   = (uid,eid,ak) => approvals[uid]?.[eid]?.amounts?.[ak] ?? getUserBonuses(uid)[ak] ?? DEFAULT_BONUSES[ak];
+  const customBonuses = load("ct_custom_bonuses",{});
+  const getAmount = (uid,eid,ak) => approvals[uid]?.[eid]?.amounts?.[ak] ?? customBonuses[uid]?.[ak] ?? getUserBonuses(uid)[ak] ?? DEFAULT_BONUSES[ak];
 
   async function toggleMyAction(eid, ak) {
     if (getApproval(user.id,eid)==="approved") return;
@@ -497,12 +515,15 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
       <button onClick={()=>setSelEvent(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:14,marginBottom:16,padding:0}}>
         ‹ <span>Înapoi</span>
       </button>
-      <div style={{background:"#1a1a1a",borderRadius:16,padding:16,marginBottom:12,border:"1px solid #2a2a2a"}}>
-        <div style={{fontSize:16,fontWeight:600,color:"#e8e8e6",marginBottom:6}}>{selEv.title}</div>
+      <div style={{background:"#1a1a1a",borderRadius:16,marginBottom:12,border:"1px solid #2a2a2a",overflow:"hidden"}}>
+        {selEv.color&&<div style={{height:4,background:selEv.color}}/>}
+        <div style={{padding:16}}>
+        <div style={{fontSize:16,fontWeight:600,color:selEv.color||"#e8e8e6",marginBottom:6}}>{selEv.title}</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {selEv.isMultiDay&&<MultiDayPill dayIndex={selEv.dayIndex} totalDays={selEv.totalDays}/>}
           {selEv.location&&<span style={{fontSize:12,color:"#555"}}>📍 {selEv.location}</span>}
           {selEv.start&&<span style={{fontSize:12,color:"#555"}}>{selEv.start}{selEv.end?`–${selEv.end}`:""}</span>}
+        </div>
         </div>
       </div>
       {approval&&(
@@ -570,9 +591,11 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           const bonus=calcBonus(user.id,ev.id);
           return (
             <div key={ev.id} onClick={()=>setSelEvent(ev.id)}
-              style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:"14px 16px",cursor:"pointer"}}>
+              style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,overflow:"hidden",cursor:"pointer"}}>
+              {ev.color&&<div style={{height:3,background:ev.color,borderRadius:"16px 16px 0 0"}}/>}
+              <div style={{padding:"13px 16px"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                <span style={{fontSize:15,fontWeight:500,color:"#e8e8e6",lineHeight:1.3}}>{ev.title}</span>
+                <span style={{fontSize:15,fontWeight:500,color:ev.color||"#e8e8e6",lineHeight:1.3}}>{ev.title}</span>
                 {ev.start&&<span style={{fontSize:11,color:"#555",whiteSpace:"nowrap",flexShrink:0}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:6}}>
@@ -588,6 +611,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
                 </div>
               )}
               <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#333"}}>Bifează ›</span></div>
+              </div>
             </div>
           );
         })}
@@ -921,23 +945,79 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount }) {
 
 function SettingsView({ user }) {
   const isTech = !user.isChief && !user.isViewer;
+
+  // Editable bonuses state — chief only
+  const [editing,    setEditing]    = useState(null); // uid being edited
+  const [tempBonus,  setTempBonus]  = useState({});
+  const [savedBonuses, setSavedBonuses] = useState(()=>load("ct_custom_bonuses",{}));
+
+  function startEdit(uid) {
+    const current = savedBonuses[uid] || getUserBonuses(uid);
+    setTempBonus({ ...current });
+    setEditing(uid);
+  }
+  function saveEdit(uid) {
+    const updated = { ...savedBonuses, [uid]: tempBonus };
+    setSavedBonuses(updated);
+    save("ct_custom_bonuses", updated);
+    // Update USER_CONFIG in memory
+    if (USER_CONFIG[uid]) USER_CONFIG[uid].bonuses = { ...tempBonus };
+    setEditing(null);
+  }
+  function getBonuses(uid) { return savedBonuses[uid] || getUserBonuses(uid); }
+
   return (
     <div style={{padding:"16px 16px 0"}}>
       {!isTech && (
         <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
-          <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Bonusuri configurate</div>
+          <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Bonusuri per persoană</div>
           {TEAM.filter(m=>!m.isViewer).map(m=>{
-            const acts=getUserActions(m.id); const bns=getUserBonuses(m.id);
+            const acts=getUserActions(m.id);
+            const bns=getBonuses(m.id);
+            const isEditingThis = editing===m.id;
             return (
-              <div key={m.id} style={{marginBottom:14}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                  <Avatar member={m} size={26}/>
-                  <span style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{m.name}</span>
-                  {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:600,letterSpacing:1}}>CHIEF</span>}
+              <div key={m.id} style={{marginBottom:16,padding:"12px 14px",background:"#111",borderRadius:12,border:"1px solid #222"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                  <Avatar member={m} size={28}/>
+                  <span style={{fontSize:13,fontWeight:600,color:"#e8e8e6",flex:1}}>{m.name}</span>
+                  {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:600}}>CHIEF</span>}
+                  {user.isChief && !m.isChief && !isEditingThis && (
+                    <button onClick={()=>startEdit(m.id)}
+                      style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#888",cursor:"pointer"}}>
+                      ✏️ Editează
+                    </button>
+                  )}
+                  {isEditingThis && (
+                    <div style={{display:"flex",gap:6}}>
+                      <button onClick={()=>saveEdit(m.id)}
+                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+                        ✓ Salvează
+                      </button>
+                      <button onClick={()=>setEditing(null)}
+                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#666",cursor:"pointer"}}>
+                        Anulează
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginLeft:34}}>
-                  {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#1a2e1a":"#222",color:bns[a.key]>0?"#4ade80":"#555",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
-                </div>
+                {isEditingThis ? (
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {acts.map(a=>(
+                      <div key={a.key} style={{display:"flex",alignItems:"center",gap:10}}>
+                        <span style={{fontSize:15}}>{a.icon}</span>
+                        <span style={{fontSize:13,flex:1,color:"#ccc"}}>{a.label}</span>
+                        <input type="number" value={tempBonus[a.key]??0}
+                          onChange={e=>setTempBonus(p=>({...p,[a.key]:parseFloat(e.target.value)||0}))}
+                          style={{width:75,padding:"6px 8px",borderRadius:8,border:"1px solid #333",background:"#1a1a1a",fontSize:14,fontWeight:600,textAlign:"right",color:"#e8e8e6"}}/>
+                        <span style={{fontSize:12,color:"#555",width:28}}>RON</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                    {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#1a2e1a":"#222",color:bns[a.key]>0?"#4ade80":"#555",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
+                  </div>
+                )}
               </div>
             );
           })}
