@@ -536,7 +536,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
                   {ev.location && <span style={{ fontSize: 12, color: "#888" }}>📍 {ev.location}</span>}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                  {appr === "approved" && <span style={{ fontSize: 11, background: "#E1F5EE", color: "#085041", padding: "1px 8px", borderRadius: 20, fontWeight: 500 }}>✓ aprobat · +{fmtRON(bonus)}</span>}
+                  {appr === "approved" && <span style={{ fontSize: 11, background: "#E1F5EE", color: "#085041", padding: "1px 8px", borderRadius: 20, fontWeight: 500 }}>✓ aprobat{user.isChief ? ` · +${fmtRON(bonus)}` : ""}</span>}
                   {appr === "rejected" && <span style={{ fontSize: 11, background: "#FCEBEB", color: "#791F1F", padding: "1px 8px", borderRadius: 20, fontWeight: 500 }}>✗ respins</span>}
                   {!appr && done.length > 0 && <span style={{ fontSize: 11, color: "#854F0B", fontWeight: 500 }}>⏳ în așteptare</span>}
                   {done.length > 0 && done.map(k => <span key={k} style={{ fontSize: 10, padding: "1px 7px", borderRadius: 20, background: "#E1F5EE", color: "#085041", fontWeight: 500 }}>✓ {ACTIONS.find(a => a.key === k)?.label}</span>)}
@@ -545,7 +545,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
             );
           })}
         </div>
-        {events.length > 0 && (
+        {events.length > 0 && user.isChief && (
           <div style={{ marginTop: 16, background: "#fff", border: "1px solid #e8e8e6", borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 13, color: "#888" }}>Total aprobat azi</span>
             <span style={{ fontSize: 18, fontWeight: 700, color: "#0F6E56" }}>+{fmtRON(calcDayTotal(user.id))}</span>
@@ -597,7 +597,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
                       <span style={{ fontSize: 14, fontWeight: on ? 500 : 400, color: on ? "#085041" : "#1a1a18" }}>{action.label}</span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 12, color: on ? "#0F6E56" : "#aaa", fontWeight: on ? 500 : 400 }}>{amt > 0 ? `+${fmtRON(amt)}` : "—"}</span>
+                      {user.isChief && <span style={{ fontSize: 12, color: on ? "#0F6E56" : "#aaa", fontWeight: on ? 500 : 400 }}>{amt > 0 ? `+${fmtRON(amt)}` : "—"}</span>}
                       <div style={{ width: 22, height: 22, borderRadius: 7, border: on ? "none" : "2px solid #ddd", background: on ? "#1D9E75" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{on && "✓"}</div>
                     </div>
                   </div>
@@ -608,14 +608,16 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
             {!isLocked && (
               <>
                 <div style={{ background: "#fafaf9", border: "1px solid #e8e8e6", borderRadius: 12, padding: "12px 14px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#888", marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#888" }}>
                     <span>Acțiuni bifate azi</span>
-                    <span>{Object.values(myCheck).filter(Boolean).length} din {myActions.length}</span>
+                    <span style={{ fontWeight: 600, color: "#1a1a18" }}>{Object.values(myCheck).filter(Boolean).length} din {myActions.length}</span>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid #ebebeb" }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1a18" }}>Total estimat</span>
-                    <span style={{ fontSize: 20, fontWeight: 700, color: "#0F6E56" }}>+{fmtRON(myTotal)}</span>
-                  </div>
+                  {user.isChief && (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, marginTop: 8, borderTop: "1px solid #ebebeb" }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1a18" }}>Total estimat</span>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: "#0F6E56" }}>+{fmtRON(myTotal)}</span>
+                    </div>
+                  )}
                 </div>
                 <button onClick={() => showToast("✅ Trimis spre aprobare lui Ionuț!")}
                   style={{ background: "#185FA5", color: "#fff", border: "none", borderRadius: 12, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
