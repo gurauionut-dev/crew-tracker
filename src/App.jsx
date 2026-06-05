@@ -806,26 +806,29 @@ function ReportView({ gcalEvents, getChecked, getApproval, getAmount }) {
 // ─── SETTINGS VIEW ────────────────────────────────────────────────────────────
 
 function SettingsView({ user }) {
+  const isTech = !user.isChief && !user.isViewer;
   return (
     <div style={{padding:"16px 16px 0"}}>
-      <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
-        <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Bonusuri configurate</div>
-        {TEAM.filter(m=>!m.isViewer).map(m=>{
-          const acts=getUserActions(m.id); const bns=getUserBonuses(m.id);
-          return (
-            <div key={m.id} style={{marginBottom:14}}>
-              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                <Avatar member={m} size={26}/>
-                <span style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{m.name}</span>
-                {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:600,letterSpacing:1}}>CHIEF</span>}
+      {!isTech && (
+        <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
+          <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Bonusuri configurate</div>
+          {TEAM.filter(m=>!m.isViewer).map(m=>{
+            const acts=getUserActions(m.id); const bns=getUserBonuses(m.id);
+            return (
+              <div key={m.id} style={{marginBottom:14}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <Avatar member={m} size={26}/>
+                  <span style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{m.name}</span>
+                  {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:600,letterSpacing:1}}>CHIEF</span>}
+                </div>
+                <div style={{display:"flex",gap:5,flexWrap:"wrap",marginLeft:34}}>
+                  {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#1a2e1a":"#222",color:bns[a.key]>0?"#4ade80":"#555",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
+                </div>
               </div>
-              <div style={{display:"flex",gap:5,flexWrap:"wrap",marginLeft:34}}>
-                {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#1a2e1a":"#222",color:bns[a.key]>0?"#4ade80":"#555",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
       <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
         <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Echipa</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
