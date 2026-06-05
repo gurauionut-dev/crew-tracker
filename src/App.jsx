@@ -106,59 +106,132 @@ function parseGCalEvents(items) {
 
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 
-function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label) {
-  const lines = [];
-  lines.push(`IG Vision™ — Raport ${label}`);
-  lines.push(`Generat: ${new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})}`);
-  lines.push("═".repeat(60));
+async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors={}) {
+  const { jsPDF } = await import("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.es.min.js");
+  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
+  const pageW=210, margin=14, colW=210-14*2;
+  let y=0;
+  const C={ dark:[15,15,15], mid:[40,40,40], gray:[110,110,110], light:[200,200,200],
+            green:[29,158,117], greenL:[230,248,240], white:[255,255,255],
+            headerBg:[20,20,20], rowAlt:[247,247,245] };
+  function hexRgb(h){ if(!h)return null; return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+  function footer(){ doc.setFontSize(8);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");doc.text("ig vision™ crew tracker  |  www.igvision.ro",pageW/2,289,{align:"center"}); }
+  function checkY(n=10){ if(y+n>275){doc.addPage();y=16;footer();doc.setTextColor(...C.dark);} }
 
-  let grandTotal = 0;
+  // Header bar
+  doc.setFillColor(...C.headerBg); doc.rect(0,0,pageW,38,"F");
+  doc.setFontSize(22);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("ig vision",margin,19);
+  doc.setFontSize(7);doc.setTextColor(...C.light);doc.text("TM",margin+doc.getTextWidth("ig vision")+1,14);
+  doc.setFontSize(10);doc.setFont("helvetica","normal");doc.text("CREW TRACKER",margin,27);
+  doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("Raport "+label,pageW-margin,17,{align:"right"});
+  doc.setFontSize(8);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
+  doc.text("Generat: "+new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}),pageW-margin,24,{align:"right"});
+  y=46;
 
-  crew.forEach(member => {
-    const details = monthEvents
-      .filter(ev => getApproval(member.id,ev.id)==="approved" && Object.values(getChecked(member.id,ev.id)).some(Boolean))
-      .map(ev => {
+  // Build crew data
+  let grandTotal=0;
+  const crewData=crew.map(member=>{
+    const details=monthEvents
+      .filter(ev=>getApproval(member.id,ev.id)==="approved"&&Object.values(getChecked(member.id,ev.id)).some(Boolean))
+      .map(ev=>{
         const ch=getChecked(member.id,ev.id);
-        const acts=getUserActions(member.id).filter(a=>ch[a.key]);
+        const acts=getUserActions(member.id).filter(a=>ch[a.key]&&a.key!=="observatii");
+        const note=typeof ch["observatii"]==="string"?ch["observatii"]:"";
         const total=acts.reduce((s,a)=>s+getAmount(member.id,ev.id,a.key),0);
-        return {ev,acts,total};
+        return {ev,acts,note,total};
       });
+    const total=details.reduce((s,d)=>s+d.total,0);
+    grandTotal+=total;
+    return {member,details,total};
+  }).filter(d=>d.details.length>0);
 
-    if (!details.length) return;
-    const total = details.reduce((s,d)=>s+d.total,0);
-    grandTotal += total;
-
-    lines.push("");
-    lines.push(`▶ ${member.name} — ${member.role}`);
-    lines.push(`  Email: ${member.email}`);
-    lines.push("─".repeat(50));
-    details.forEach(({ev,acts,total:evT})=>{
-      const date = new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long"});
-      const dayInfo = ev.isMultiDay?` (Ziua ${ev.dayIndex+1}/${ev.totalDays})`:"";
-      lines.push(`  ${date}${dayInfo} — ${ev.title}`);
-      if (ev.location) lines.push(`    📍 ${ev.location}`);
-      lines.push(`    Acțiuni: ${acts.map(a=>a.label).join(", ")}`);
-      lines.push(`    Sumă: +${fmtRON(evT)}`);
+  // Summary cards
+  if(crewData.length>0){
+    const cw=(colW-4*(crewData.length-1))/crewData.length;
+    crewData.forEach(({member,total},i)=>{
+      const cx=margin+i*(cw+4);
+      doc.setFillColor(...C.greenL);doc.roundedRect(cx,y,cw,18,2,2,"F");
+      doc.setFillColor(...C.green);doc.rect(cx,y,3,18,"F");
+      doc.setFontSize(8);doc.setTextColor(...C.gray);doc.setFont("helvetica","normal");
+      doc.text(member.name.split(" ")[0],cx+6,y+6.5);
+      doc.setFontSize(10);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
+      doc.text("+"+fmtRON(total),cx+6,y+14);
     });
-    lines.push(`  ${"─".repeat(40)}`);
-    lines.push(`  TOTAL ${member.name.split(" ")[0].toUpperCase()}: +${fmtRON(total)}`);
+    y+=22;
+    doc.setFillColor(...C.green);doc.rect(margin,y,colW,9,"F");
+    doc.setFontSize(9);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");
+    doc.text("TOTAL GENERAL",margin+4,y+6.5);
+    doc.text("+"+fmtRON(grandTotal),pageW-margin-2,y+6.5,{align:"right"});
+    y+=16;
+  }
+
+  // Per member tables
+  crewData.forEach(({member,details,total})=>{
+    checkY(30);
+    // Member header
+    doc.setFillColor(...C.mid);doc.rect(margin,y,colW,12,"F");
+    doc.setFontSize(10);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");
+    doc.text(member.name,margin+4,y+8);
+    doc.setFontSize(7.5);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
+    doc.text(member.email,margin+4,y+11.5);
+    doc.setFontSize(10);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
+    doc.text("+"+fmtRON(total),pageW-margin-2,y+8,{align:"right"});
+    y+=14;
+
+    // Col widths
+    const c={date:28,event:70,actions:50,sum:34};
+    // Table header
+    doc.setFillColor(...C.gray);doc.rect(margin,y,colW,7,"F");
+    doc.setFontSize(7);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");
+    doc.text("DATA",margin+2,y+5);
+    doc.text("EVENIMENT",margin+c.date+2,y+5);
+    doc.text("ACTIUNI",margin+c.date+c.event+2,y+5);
+    doc.text("SUMA",pageW-margin-2,y+5,{align:"right"});
+    y+=8;
+
+    details.forEach(({ev,acts,note,total:evT},i)=>{
+      const rowH=note?14:8.5;
+      checkY(rowH+2);
+      if(i%2===0){doc.setFillColor(...C.rowAlt);doc.rect(margin,y,colW,rowH,"F");}
+      const evRgb=hexRgb(eventColors[ev.originalId||ev.id]);
+      if(evRgb){doc.setFillColor(...evRgb);doc.circle(margin+2.5,y+rowH/2,1.8,"F");}
+      const dateStr=new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
+      const dayInfo=ev.isMultiDay?" Z"+ev.dayIndex+1:"";
+      doc.setFontSize(7.5);doc.setTextColor(...C.dark);doc.setFont("helvetica","normal");
+      doc.text(dateStr+dayInfo,margin+5,y+6);
+      let title=ev.title;
+      const tmw=c.event-4;
+      while(doc.getTextWidth(title)>tmw&&title.length>8)title=title.slice(0,-1);
+      if(title!==ev.title)title+="...";
+      doc.text(title,margin+c.date+2,y+6);
+      doc.setFontSize(7);doc.setTextColor(...C.gray);
+      let astr=acts.map(a=>a.label).join(", ");
+      const amw=c.actions-2;
+      while(doc.getTextWidth(astr)>amw&&astr.length>5)astr=astr.slice(0,-1);
+      if(astr!==acts.map(a=>a.label).join(", "))astr+="...";
+      doc.text(astr,margin+c.date+c.event+2,y+6);
+      doc.setFontSize(8);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
+      doc.text("+"+fmtRON(evT),pageW-margin-2,y+6,{align:"right"});
+      if(note){
+        doc.setFontSize(7);doc.setTextColor(...C.gray);doc.setFont("helvetica","italic");
+        const ns=note.length>85?note.slice(0,85)+"...":note;
+        doc.text("Obs: "+ns,margin+c.date+2,y+12);
+      }
+      doc.setDrawColor(...C.light);doc.setLineWidth(0.2);
+      doc.line(margin,y+rowH,margin+colW,y+rowH);
+      y+=rowH;
+    });
+
+    // Member total
+    doc.setFillColor(...C.greenL);doc.rect(margin,y,colW,8,"F");
+    doc.setFontSize(8);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
+    doc.text("TOTAL "+member.name.split(" ")[0].toUpperCase()+" — "+details.length+" activari",margin+4,y+5.5);
+    doc.text("+"+fmtRON(total),pageW-margin-2,y+5.5,{align:"right"});
+    y+=14;
   });
 
-  lines.push("");
-  lines.push("═".repeat(60));
-  lines.push(`TOTAL GENERAL: +${fmtRON(grandTotal)}`);
-  lines.push("═".repeat(60));
-  lines.push("");
-  lines.push("www.igvision.ro");
-
-  const content = lines.join("\n");
-  const blob = new Blob([content], {type:"text/plain;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `igvision-raport-${label.replace(/\s+/g,"-").toLowerCase()}.txt`;
-  a.click();
-  URL.revokeObjectURL(url);
+  footer();
+  doc.save("igvision-raport-"+label.replace(/[^a-z0-9]/gi,"-").toLowerCase()+".pdf");
 }
 
 // ─── ATOMS ────────────────────────────────────────────────────────────────────
@@ -901,7 +974,7 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
   const grandTotal = crew.reduce((s,m)=>s+getDetail(m.id).reduce((ss,d)=>ss+d.total,0),0);
 
   function downloadReport() {
-    generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label);
+    generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors||{});
   }
 
   return (
@@ -937,7 +1010,7 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
 
       {/* Download button */}
       <button onClick={downloadReport} style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:14,fontWeight:500,cursor:"pointer",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-        📄 Descarcă raport TXT
+        📄 Descarcă raport PDF
       </button>
 
       {/* Member cards */}
