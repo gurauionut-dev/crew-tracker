@@ -78,9 +78,7 @@ function parseGCalEvents(items) {
     const startStr = ev.start?.dateTime || ev.start?.date || "";
     const endStr   = ev.end?.dateTime   || ev.end?.date   || "";
     const startD   = new Date(startStr);
-    // For all-day events, end date is exclusive in Google API
     const endD     = new Date(endStr);
-    if (!hasTime) endD.setDate(endD.getDate() - 1); // make inclusive
 
     // Detect type from title
     const tl = title.toLowerCase();
@@ -90,10 +88,18 @@ function parseGCalEvents(items) {
     else if (tl.includes("condus") || tl.includes("transport")) type = "condus";
     else if (tl.includes("deplasare"))                         type = "deplasare";
 
-    // Calculate total span in days
+    // Calculate last real day (inclusive)
+    // All-day: Google end date is EXCLUSIVE (e.g. event ends 5 iunie → endDate = 6 iunie)
+    // Timed:   If event ends exactly at 00:00, that midnight belongs to previous day
     const startDay = new Date(startD); startDay.setHours(0,0,0,0);
     const endDay   = new Date(endD);   endDay.setHours(0,0,0,0);
-    const totalDays = Math.round((endDay - startDay) / 86400000) + 1;
+
+    // For all-day events subtract 1 day (exclusive → inclusive)
+    // For timed events ending exactly at midnight, subtract 1 day too
+    const endsAtMidnight = hasTime && endD.getHours() === 0 && endD.getMinutes() === 0;
+    if (!hasTime || endsAtMidnight) endDay.setDate(endDay.getDate() - 1);
+
+    const totalDays = Math.max(1, Math.round((endDay - startDay) / 86400000) + 1);
 
     // Expand: create one entry per day
     for (let i = 0; i < totalDays; i++) {
