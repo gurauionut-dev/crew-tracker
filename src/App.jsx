@@ -49,7 +49,13 @@ const TYPE_STYLES = {
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
-function toKey(d)      { return new Date(d).toISOString().slice(0, 10); }
+function toKey(d) {
+  const dt = new Date(d);
+  const y  = dt.getFullYear();
+  const m  = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 function addDays(d, n) { const nd = new Date(d); nd.setDate(nd.getDate() + n); return nd; }
 function fmtDate(d)    { return new Date(d).toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" }); }
 function fmtMonth(d)   { return new Date(d).toLocaleDateString("ro-RO", { month: "long", year: "numeric" }); }
