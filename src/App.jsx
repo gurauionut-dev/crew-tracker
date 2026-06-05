@@ -107,6 +107,16 @@ function parseGCalEvents(items) {
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 
 async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount, label, eventColors={}) {
+  // jsPDF doesn't support Romanian diacritics — replace them
+  function ro(s) {
+    if (!s) return "";
+    return String(s)
+      .replace(/ș/g,"s").replace(/Ș/g,"S")
+      .replace(/ț/g,"t").replace(/Ț/g,"T")
+      .replace(/ă/g,"a").replace(/Ă/g,"A")
+      .replace(/î/g,"i").replace(/Î/g,"I")
+      .replace(/â/g,"a").replace(/Â/g,"A");
+  }
   // Load jsPDF via script tag if not already loaded
   if (!window.jspdf) {
     await new Promise((resolve, reject) => {
@@ -132,7 +142,7 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
   doc.setFontSize(22);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("ig vision",margin,19);
   doc.setFontSize(7);doc.setTextColor(...C.light);doc.text("TM",margin+doc.getTextWidth("ig vision")+1,14);
   doc.setFontSize(10);doc.setFont("helvetica","normal");doc.text("CREW TRACKER",margin,27);
-  doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("Raport "+label,pageW-margin,17,{align:"right"});
+  doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("Raport "+ro(label),pageW-margin,17,{align:"right"});
   doc.setFontSize(8);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
   doc.text("Generat: "+new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}),pageW-margin,24,{align:"right"});
   y=46;
@@ -162,7 +172,7 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
       doc.setFillColor(...C.greenL);doc.roundedRect(cx,y,cw,18,2,2,"F");
       doc.setFillColor(...C.green);doc.rect(cx,y,3,18,"F");
       doc.setFontSize(8);doc.setTextColor(...C.gray);doc.setFont("helvetica","normal");
-      doc.text(member.name.split(" ")[0],cx+6,y+6.5);
+      doc.text(ro(member.name.split(" ")[0]),cx+6,y+6.5);
       doc.setFontSize(10);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
       doc.text("+"+fmtRON(total),cx+6,y+14);
     });
@@ -180,9 +190,9 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
     // Member header
     doc.setFillColor(...C.mid);doc.rect(margin,y,colW,12,"F");
     doc.setFontSize(10);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");
-    doc.text(member.name,margin+4,y+8);
+    doc.text(ro(member.name),margin+4,y+8);
     doc.setFontSize(7.5);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
-    doc.text(member.email,margin+4,y+11.5);
+    doc.text(ro(member.email),margin+4,y+11.5);
     doc.setFontSize(10);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
     doc.text("+"+fmtRON(total),pageW-margin-2,y+8,{align:"right"});
     y+=14;
@@ -214,7 +224,7 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
       if(title!==ev.title)title+="...";
       doc.text(title,margin+c.date+2,y+6);
       doc.setFontSize(7);doc.setTextColor(...C.gray);
-      let astr=acts.map(a=>a.label).join(", ");
+      let astr=ro(acts.map(a=>a.label).join(", "));
       const amw=c.actions-2;
       while(doc.getTextWidth(astr)>amw&&astr.length>5)astr=astr.slice(0,-1);
       if(astr!==acts.map(a=>a.label).join(", "))astr+="...";
@@ -224,7 +234,7 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
       if(note){
         doc.setFontSize(7);doc.setTextColor(...C.gray);doc.setFont("helvetica","italic");
         const ns=note.length>85?note.slice(0,85)+"...":note;
-        doc.text("Obs: "+ns,margin+c.date+2,y+12);
+        doc.text("Obs: "+ro(ns),margin+c.date+2,y+12);
       }
       doc.setDrawColor(...C.light);doc.setLineWidth(0.2);
       doc.line(margin,y+rowH,margin+colW,y+rowH);
@@ -234,7 +244,7 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
     // Member total
     doc.setFillColor(...C.greenL);doc.rect(margin,y,colW,8,"F");
     doc.setFontSize(8);doc.setTextColor(...C.green);doc.setFont("helvetica","bold");
-    doc.text("TOTAL "+member.name.split(" ")[0].toUpperCase()+" — "+details.length+" activari",margin+4,y+5.5);
+    doc.text("TOTAL "+ro(member.name.split(" ")[0]).toUpperCase()+" - "+details.length+" activari",margin+4,y+5.5);
     doc.text("+"+fmtRON(total),pageW-margin-2,y+5.5,{align:"right"});
     y+=14;
   });
