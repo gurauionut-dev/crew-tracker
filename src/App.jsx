@@ -77,8 +77,6 @@ function parseGCalEvents(items) {
     // Determine start and end dates
     const startStr = ev.start?.dateTime || ev.start?.date || "";
     const endStr   = ev.end?.dateTime   || ev.end?.date   || "";
-    const startD   = new Date(startStr);
-    const endD     = new Date(endStr);
 
     // Detect type from title
     const tl = title.toLowerCase();
@@ -88,14 +86,29 @@ function parseGCalEvents(items) {
     else if (tl.includes("condus") || tl.includes("transport")) type = "condus";
     else if (tl.includes("deplasare"))                         type = "deplasare";
 
+    // Parse date without timezone conversion
+    // All-day events have format "YYYY-MM-DD" — parse directly to avoid UTC shift
+    // Timed events have format "YYYY-MM-DDTHH:MM:SS+03:00" — use local time
+    function parseDateLocal(str) {
+      if (!str) return new Date();
+      if (str.length === 10) {
+        // "YYYY-MM-DD" — all-day, parse as local date directly
+        const [y, m, d] = str.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+      // timed event — JavaScript parses with timezone offset correctly
+      return new Date(str);
+    }
+
+    const startD = parseDateLocal(startStr);
+    const endD   = parseDateLocal(endStr);
+
     // Calculate last real day (inclusive)
-    // All-day: Google end date is EXCLUSIVE (e.g. event ends 5 iunie → endDate = 6 iunie)
-    // Timed:   If event ends exactly at 00:00, that midnight belongs to previous day
+    // All-day: Google end date is EXCLUSIVE (e.g. ends Saturday → endDate = Sunday)
+    // Timed ending exactly at 00:00 local: that midnight = previous day
     const startDay = new Date(startD); startDay.setHours(0,0,0,0);
     const endDay   = new Date(endD);   endDay.setHours(0,0,0,0);
 
-    // For all-day events subtract 1 day (exclusive → inclusive)
-    // For timed events ending exactly at midnight, subtract 1 day too
     const endsAtMidnight = hasTime && endD.getHours() === 0 && endD.getMinutes() === 0;
     if (!hasTime || endsAtMidnight) endDay.setDate(endDay.getDate() - 1);
 
