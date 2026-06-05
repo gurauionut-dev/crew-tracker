@@ -258,7 +258,7 @@ export default function App() {
             const newCount  = Object.values(acts).filter(Boolean).length;
             if (newCount > prevCount) {
               const member = TEAM.find(m=>m.id===uid);
-              if (member && uid !== user.id) showToast(`🔔 ${member.name.split(" ")[0]} a bifat acțiuni noi!`);
+              if (member && uid !== user.id) showToast(`🔔 ${member.name.split(" ")[0]} a bifat acțiuni noi!`, "default");
             }
           });
         });
@@ -274,7 +274,7 @@ export default function App() {
         Object.entries(myNew).forEach(([eid,{status}])=>{
           const prevStatus = myPrev[eid]?.status;
           if (status && status!==prevStatus) {
-            showToast(status==="approved"?"✅ Ionuț ți-a aprobat acțiunile!":"❌ Ionuț a respins acțiunile.");
+            showToast(status==="approved"?"✅ Ionuț ți-a aprobat acțiunile!":"❌ Ionuț a respins acțiunile.", status==="approved"?"approved":"rejected");
           }
         });
       }
@@ -295,7 +295,46 @@ export default function App() {
       .catch(e=>{ setCalError(e.message); setCalLoading(false); });
   },[day.getMonth(),day.getFullYear()]);
 
-  function showToast(msg) { setToast(msg); setTimeout(()=>setToast(null),3000); }
+  function playBeep(type = "default") {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === "approved") {
+        // Two ascending tones — approval
+        osc.frequency.setValueAtTime(520, ctx.currentTime);
+        osc.frequency.setValueAtTime(780, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.35);
+      } else if (type === "rejected") {
+        // Low descending tone — rejection
+        osc.frequency.setValueAtTime(380, ctx.currentTime);
+        osc.frequency.setValueAtTime(240, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.4);
+      } else {
+        // Short neutral beep — new action notification
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.2);
+      }
+      ctx.close();
+    } catch(e) {}
+  }
+
+  function showToast(msg, sound = "default") {
+    setToast(msg);
+    setTimeout(()=>setToast(null),3000);
+    playBeep(sound);
+  }
 
   const dayKey = toKey(day);
   const events = gcalEvents[dayKey]||[];
@@ -317,7 +356,7 @@ export default function App() {
   async function setApprovalStatus(uid, eid, status, amounts) {
     const amts = amounts || (approvals[uid]?.[eid]?.amounts) || {};
     await saveApproval(uid, eid, status, amts);
-    showToast(status==="approved"?"✓ Aprobat":status==="rejected"?"✗ Respins":"↩ Anulat");
+    showToast(status==="approved"?"✓ Aprobat":status==="rejected"?"✗ Respins":"↩ Anulat", status==="approved"?"approved":status==="rejected"?"rejected":"default");
   }
 
   async function submitApproval(uid, eid, amounts) {
@@ -341,7 +380,7 @@ export default function App() {
   let tabs=[];
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
   else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"settings",label:"Setări"}];
-  else                    tabs=[{id:"today",label:"Azi"},{id:"settings",label:"Setări"}];
+  else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"settings",label:"Setări"}];
   if (user.isViewer&&tab!=="report") setTab("report");
 
   const pending = user.isChief?getPendingCount():0;
@@ -363,8 +402,8 @@ export default function App() {
 
       <div style={{flex:1,overflowY:"auto",paddingBottom:"calc(72px + env(safe-area-inset-bottom))"}}>
         {tab==="today"   &&!user.isViewer&&<TodayView   {...shared} selEvent={selEvent} setSelEvent={setSelEvent} toggleMyAction={toggleMyAction}/>}
-        {tab==="approve" && user.isChief &&<ApproveView {...shared} submitApproval={submitApproval} setApprovalStatus={setApprovalStatus}/>}
-        {tab==="report"                  &&<ReportView  {...shared}/>}
+        {tab==="approve" && user.isChief &&<ApproveView gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} setApprovalStatus={setApprovalStatus} submitApproval={submitApproval} getAmount={getAmount} calcBonus={calcBonus} calLoading={calLoading}/>}
+        {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount}/>}
         {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
       </div>
 
@@ -565,117 +604,192 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
 
 // ─── APPROVE VIEW ─────────────────────────────────────────────────────────────
 
-function ApproveView({ user, day, setDay, events, getChecked, getApproval, setApprovalStatus, submitApproval, getAmount, calcBonus, calcDayTotal, calLoading }) {
-  const [expanded,setExpanded]=useState(null);
-  const [editAmounts,setEditAmounts]=useState({});
+function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalStatus, submitApproval, getAmount, calcBonus, calLoading }) {
+  const [editOpen,  setEditOpen]   = useState(null); // "uid_eid"
+  const [editAmounts,setEditAmounts]= useState({});
+  const members = TEAM.filter(m=>!m.isChief&&!m.isViewer);
+
+  // Collect ALL pending actions across all loaded calendar days
+  const allDays = Object.values(gcalEvents).flat();
+  const pendingItems = [];
+  const approvedItems = [];
+
+  members.forEach(member=>{
+    const userActions=getUserActions(member.id);
+    allDays.forEach(ev=>{
+      const ch=getChecked(member.id,ev.id);
+      const activeActs=userActions.filter(a=>ch[a.key]);
+      if (!activeActs.length) return;
+      const appr=getApproval(member.id,ev.id);
+      const item={member,ev,activeActs,appr};
+      if (appr==="approved") approvedItems.push(item);
+      else pendingItems.push(item);
+    });
+  });
+
   function getEdit(uid,eid,ak){ return editAmounts[`${uid}-${eid}-${ak}`]??getAmount(uid,eid,ak); }
   function setEdit(uid,eid,ak,val){ setEditAmounts(p=>({...p,[`${uid}-${eid}-${ak}`]:val})); }
-  async function commitAndApprove(uid,eid) {
-    const userActions=getUserActions(uid);
-    const ch=getChecked(uid,eid);
-    const acts=userActions.filter(a=>ch[a.key]);
+
+  async function doApprove(uid,eid,activeActs) {
     const amounts={};
-    acts.forEach(a=>{ amounts[a.key]=Number(getEdit(uid,eid,a.key)); });
+    activeActs.forEach(a=>{ amounts[a.key]=Number(getEdit(uid,eid,a.key)); });
     await submitApproval(uid,eid,amounts);
-    setExpanded(null);
+    setEditOpen(null);
   }
-  const members=TEAM.filter(m=>!m.isChief&&!m.isViewer);
+  async function approveAll() {
+    for (const {member,ev,activeActs} of pendingItems) {
+      const amounts={};
+      activeActs.forEach(a=>{ amounts[a.key]=getAmount(member.id,ev.id,a.key); });
+      await submitApproval(member.id,ev.id,amounts);
+    }
+  }
 
   return (
     <div style={{padding:"16px 16px 0"}}>
-      <DayNav day={day} setDay={setDay} compact/>
-      {calLoading&&<EmptyDay loading/>}
-      {!calLoading&&events.length===0&&<EmptyDay/>}
-      {members.map(member=>{
-        const memberEvs=events.filter(ev=>Object.values(getChecked(member.id,ev.id)).some(Boolean));
-        const userActions=getUserActions(member.id);
-        return (
-          <div key={member.id} style={{marginBottom:20}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:"12px 14px",background:"#1a1a1a",borderRadius:14,border:"1px solid #2a2a2a"}}>
-              <Avatar member={member} size={38}/>
-              <div style={{flex:1}}>
-                <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6"}}>{member.name}</div>
-                <div style={{fontSize:11,color:"#555"}}>{member.role}</div>
-              </div>
-              <div style={{textAlign:"right"}}>
-                <div style={{fontSize:10,color:"#444"}}>aprobat azi</div>
-                <div style={{fontSize:16,fontWeight:700,color:calcDayTotal(member.id)>0?"#4ade80":"#333"}}>
-                  {calcDayTotal(member.id)>0?`+${fmtRON(calcDayTotal(member.id))}`:"—"}
-                </div>
-              </div>
+
+      {/* Pending section */}
+      {calLoading && <EmptyDay loading/>}
+
+      {!calLoading && pendingItems.length===0 && approvedItems.length===0 && (
+        <EmptyDay/>
+      )}
+
+      {pendingItems.length>0 && (
+        <>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{fontSize:12,fontWeight:600,color:"#888",textTransform:"uppercase",letterSpacing:"0.06em"}}>
+              {pendingItems.length} în așteptare
             </div>
-            {memberEvs.length===0&&<div style={{padding:"8px 4px",fontSize:13,color:"#444"}}>Nicio acțiune raportată azi.</div>}
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {memberEvs.map(ev=>{
-                const ch=getChecked(member.id,ev.id);
-                const activeActs=userActions.filter(a=>ch[a.key]);
-                const appr=getApproval(member.id,ev.id);
-                const key=`${member.id}-${ev.id}`;
-                const isOpen=expanded===key;
-                const editTotal=activeActs.reduce((s,a)=>s+Number(getEdit(member.id,ev.id,a.key)),0);
-                return (
-                  <div key={ev.id} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,overflow:"hidden"}}>
-                    <div style={{padding:"12px 14px"}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8,gap:8}}>
-                        <span style={{fontSize:14,fontWeight:500,color:"#e8e8e6",flex:1}}>{ev.title}</span>
-                        {appr==="approved"&&<span style={{fontSize:11,background:"#1a2e1a",color:"#4ade80",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #2d5a2d"}}>✓</span>}
-                        {appr==="rejected"&&<span style={{fontSize:11,background:"#2a1515",color:"#f87171",padding:"2px 8px",borderRadius:20,fontWeight:500}}>✗</span>}
-                        {!appr&&<span style={{fontSize:11,background:"#2a2000",color:"#f59e0b",padding:"2px 8px",borderRadius:20,fontWeight:500}}>⏳</span>}
-                      </div>
-                      <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:10}}>
-                        {activeActs.map(a=><span key={a.key} style={{fontSize:11,padding:"2px 8px",borderRadius:20,background:"#1a2e1a",color:"#4ade80",fontWeight:500}}>{a.icon} {a.label} · {fmtRON(getAmount(member.id,ev.id,a.key))}</span>)}
-                      </div>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontSize:16,fontWeight:700,color:appr==="approved"?"#4ade80":"#666"}}>+{fmtRON(calcBonus(member.id,ev.id))}</span>
-                        <div style={{display:"flex",gap:8}}>
-                          {!appr&&<button onClick={()=>setExpanded(isOpen?null:key)} style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#888",cursor:"pointer"}}>{isOpen?"Închide":"Revizuiește"}</button>}
-                          {appr==="approved"&&<button onClick={()=>setApprovalStatus(member.id,ev.id,null,{})} style={{fontSize:12,padding:"5px 12px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#555",cursor:"pointer"}}>Anulează</button>}
-                        </div>
+            <button onClick={approveAll}
+              style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+              ✓ Aprobă tot
+            </button>
+          </div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
+            {pendingItems.map(({member,ev,activeActs})=>{
+              const key=`${member.id}_${ev.id}`;
+              const isOpen=editOpen===key;
+              const editTotal=activeActs.reduce((s,a)=>s+Number(getEdit(member.id,ev.id,a.key)),0);
+              const bonus=calcBonus(member.id,ev.id);
+              const dateLabel=new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
+              return (
+                <div key={key} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,overflow:"hidden"}}>
+                  {/* Header */}
+                  <div style={{padding:"12px 14px",borderBottom:"1px solid #222",display:"flex",alignItems:"center",gap:10}}>
+                    <Avatar member={member} size={34}/>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6"}}>{member.name}</div>
+                      <div style={{fontSize:11,color:"#555"}}>{ev.title} · {dateLabel}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</div>
+                    </div>
+                    <span style={{fontSize:11,background:"#2a2000",color:"#f59e0b",padding:"2px 8px",borderRadius:20,fontWeight:500}}>⏳</span>
+                  </div>
+                  {/* Body */}
+                  <div style={{padding:"12px 14px"}}>
+                    <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+                      {activeActs.map(a=>(
+                        <span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:"#1a2e1a",color:"#4ade80",fontWeight:500}}>
+                          {a.icon} {a.label} · {fmtRON(getAmount(member.id,ev.id,a.key))}
+                        </span>
+                      ))}
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <span style={{fontSize:18,fontWeight:700,color:"#4ade80"}}>+{fmtRON(bonus)}</span>
+                      <div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>setEditOpen(isOpen?null:key)}
+                          style={{fontSize:12,padding:"7px 12px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#888",cursor:"pointer"}}>
+                          ✏️ Modifică
+                        </button>
+                        <button onClick={()=>doApprove(member.id,ev.id,activeActs)}
+                          style={{fontSize:12,padding:"7px 14px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+                          ✓ Aprobă
+                        </button>
+                        <button onClick={()=>setApprovalStatus(member.id,ev.id,"rejected",{})}
+                          style={{fontSize:12,padding:"7px 12px",borderRadius:8,border:"1px solid #ef4444",background:"transparent",color:"#ef4444",cursor:"pointer"}}>
+                          ✗
+                        </button>
                       </div>
                     </div>
-                    {isOpen&&(
-                      <div style={{padding:"14px",background:"#111",borderTop:"1px solid #222"}}>
-                        <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:14}}>
-                          {activeActs.map(a=>(
-                            <div key={a.key} style={{display:"flex",alignItems:"center",gap:10}}>
-                              <span style={{fontSize:20}}>{a.icon}</span>
-                              <span style={{fontSize:14,flex:1,color:"#ccc",fontWeight:500}}>{a.label}</span>
-                              <input type="number" value={getEdit(member.id,ev.id,a.key)} onChange={e=>setEdit(member.id,ev.id,a.key,e.target.value)}
-                                style={{width:80,padding:"8px 10px",borderRadius:8,border:"1px solid #333",background:"#1a1a1a",fontSize:15,fontWeight:600,textAlign:"right",color:"#e8e8e6"}}/>
-                              <span style={{fontSize:12,color:"#555",width:28}}>RON</span>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",background:"#1a2e1a",borderRadius:12,marginBottom:12,border:"1px solid #2d5a2d"}}>
-                          <span style={{fontSize:14,color:"#4ade80"}}>Total de plătit</span>
-                          <span style={{fontSize:22,fontWeight:700,color:"#4ade80"}}>+{fmtRON(editTotal)}</span>
-                        </div>
-                        <div style={{display:"flex",gap:10}}>
-                          <button onClick={()=>commitAndApprove(member.id,ev.id)} style={{flex:1,padding:"14px",borderRadius:12,border:"none",background:"#4ade80",color:"#111",fontSize:15,fontWeight:700,cursor:"pointer"}}>✓ Aprobă</button>
-                          <button onClick={()=>{setApprovalStatus(member.id,ev.id,"rejected",{});setExpanded(null);}} style={{flex:1,padding:"14px",borderRadius:12,border:"1px solid #ef4444",background:"transparent",color:"#ef4444",fontSize:15,fontWeight:600,cursor:"pointer"}}>✗ Respinge</button>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
+                  {/* Edit amounts panel */}
+                  {isOpen && (
+                    <div style={{padding:"14px",background:"#111",borderTop:"1px solid #222"}}>
+                      <div style={{fontSize:12,color:"#666",marginBottom:12}}>Modifică suma per acțiune:</div>
+                      <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
+                        {activeActs.map(a=>(
+                          <div key={a.key} style={{display:"flex",alignItems:"center",gap:10}}>
+                            <span style={{fontSize:18}}>{a.icon}</span>
+                            <span style={{fontSize:14,flex:1,color:"#ccc",fontWeight:500}}>{a.label}</span>
+                            <input type="number" value={getEdit(member.id,ev.id,a.key)}
+                              onChange={e=>setEdit(member.id,ev.id,a.key,e.target.value)}
+                              style={{width:80,padding:"8px 10px",borderRadius:8,border:"1px solid #333",background:"#1a1a1a",fontSize:15,fontWeight:600,textAlign:"right",color:"#e8e8e6"}}/>
+                            <span style={{fontSize:12,color:"#555",width:28}}>RON</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#1a2e1a",borderRadius:10,marginBottom:10,border:"1px solid #2d5a2d"}}>
+                        <span style={{fontSize:13,color:"#4ade80"}}>Total de plătit</span>
+                        <span style={{fontSize:20,fontWeight:700,color:"#4ade80"}}>+{fmtRON(editTotal)}</span>
+                      </div>
+                      <button onClick={()=>doApprove(member.id,ev.id,activeActs)}
+                        style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:"#4ade80",color:"#111",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                        ✓ Aprobă cu sumele modificate
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </>
+      )}
+
+      {/* Approved section */}
+      {approvedItems.length>0 && (
+        <>
+          <div style={{fontSize:12,fontWeight:600,color:"#444",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>
+            {approvedItems.length} aprobate
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {approvedItems.map(({member,ev,activeActs})=>{
+              const key=`${member.id}_${ev.id}`;
+              const bonus=calcBonus(member.id,ev.id);
+              const dateLabel=new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
+              return (
+                <div key={key} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,opacity:0.7}}>
+                  <Avatar member={member} size={30}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{member.name.split(" ")[0]} · {ev.title}</div>
+                    <div style={{fontSize:11,color:"#555"}}>{dateLabel}</div>
+                  </div>
+                  <span style={{fontSize:14,fontWeight:700,color:"#4ade80"}}>+{fmtRON(bonus)}</span>
+                  <span style={{fontSize:11,background:"#1a2e1a",color:"#4ade80",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #2d5a2d"}}>✓</span>
+                  <button onClick={()=>setApprovalStatus(member.id,ev.id,null,{})}
+                    style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #333",background:"transparent",color:"#555",cursor:"pointer"}}>
+                    Anulează
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
 // ─── REPORT VIEW ──────────────────────────────────────────────────────────────
 
-function ReportView({ gcalEvents, getChecked, getApproval, getAmount }) {
+function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount }) {
   const [mode, setMode] = useState("lunar"); // "lunar" | "custom"
   const [rm,   setRm]   = useState(()=>{ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),1); });
   const [dateFrom, setDateFrom] = useState(toKey(addDays(new Date(),-9)));
   const [dateTo,   setDateTo]   = useState(toKey(new Date()));
 
-  const crew = TEAM.filter(m=>!m.isChief&&!m.isViewer);
+  // Chief and viewers see all crew; tech sees only themselves
+  const crew = (user.isChief||user.isViewer)
+    ? TEAM.filter(m=>!m.isChief&&!m.isViewer)
+    : TEAM.filter(m=>m.id===user.id);
 
   function getMonthEvents() {
     const monthStart=new Date(rm.getFullYear(),rm.getMonth(),1);
