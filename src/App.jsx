@@ -10,18 +10,19 @@ const ACTIONS = [
   { key: "condus",    label: "Condus x1",   icon: "🚐" },
   { key: "condus2",   label: "Condus x2",   icon: "🚐🚐" },
   { key: "deplasare", label: "Deplasare",   icon: "🗺️"  },
-  { key: "asistenta", label: "Asistență",   icon: "🎧" },
+  { key: "asistenta",   label: "Asistență",   icon: "🎧" },
+  { key: "observatii",  label: "Observații",  icon: "📝", isNote: true },
 ];
 
 const DEFAULT_BONUSES = {
-  montaj: 37.5, demontaj: 37.5, operare: 250, condus: 25, condus2: 50, deplasare: 0, asistenta: 0,
+  montaj: 37.5, demontaj: 37.5, operare: 250, condus: 25, condus2: 50, deplasare: 0, asistenta: 0, observatii: 0,
 };
 
 const USER_CONFIG = {
-  ionut:  { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
-  daniel: { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],                    bonuses: { ...DEFAULT_BONUSES, montaj: 50, demontaj: 50 } },
-  stefan: { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta"], bonuses: { ...DEFAULT_BONUSES } },
-  gabi:   { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],                    bonuses: { ...DEFAULT_BONUSES } },
+  ionut:  { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta","observatii"], bonuses: { ...DEFAULT_BONUSES } },
+  daniel: { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta","observatii"],                    bonuses: { ...DEFAULT_BONUSES, montaj: 50, demontaj: 50 } },
+  stefan: { visibleActions: ["montaj","demontaj","operare","condus","condus2","deplasare","asistenta","observatii"], bonuses: { ...DEFAULT_BONUSES } },
+  gabi:   { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta","observatii"],                    bonuses: { ...DEFAULT_BONUSES } },
 };
 
 const TEAM = [
@@ -50,7 +51,7 @@ function fmtRON(n)       { const v=Number(n); return v%1===0?`${v} RON`:`${v.toF
 function load(k,fb)      { try { const v=localStorage.getItem(k); return v?JSON.parse(v):fb; } catch { return fb; } }
 function save(k,val)     { try { localStorage.setItem(k,JSON.stringify(val)); } catch {} }
 function getUserActions(uid) {
-  return ACTIONS.filter(a=>(USER_CONFIG[uid]?.visibleActions||["montaj","demontaj","operare","deplasare","asistenta"]).includes(a.key));
+  return ACTIONS.filter(a=>(USER_CONFIG[uid]?.visibleActions||["montaj","demontaj","operare","deplasare","asistenta","observatii"]).includes(a.key));
 }
 function getUserBonuses(uid) { return USER_CONFIG[uid]?.bonuses||DEFAULT_BONUSES; }
 
@@ -363,13 +364,13 @@ export default function App() {
   const customBonuses = load("ct_custom_bonuses",{});
   const getAmount = (uid,eid,ak) => approvals[uid]?.[eid]?.amounts?.[ak] ?? customBonuses[uid]?.[ak] ?? getUserBonuses(uid)[ak] ?? DEFAULT_BONUSES[ak];
 
-  async function toggleMyAction(eid, ak) {
+  async function toggleMyAction(eid, ak, textVal) {
     if (getApproval(user.id,eid)==="approved") return;
     const current = getChecked(user.id,eid);
-    const updated = { ...current, [ak]: !current[ak] };
-    // Optimistic update
+    // For observatii: store text string; for others: toggle boolean
+    const newVal = textVal !== undefined ? textVal : !current[ak];
+    const updated = { ...current, [ak]: newVal };
     setChecked(prev=>{ const u={...(prev[user.id]||{})}; u[eid]=updated; return {...prev,[user.id]:u}; });
-    // Save to Firebase
     await saveChecked(user.id, eid, updated);
   }
 
@@ -423,7 +424,7 @@ export default function App() {
       <div style={{flex:1,overflowY:"auto",paddingBottom:"calc(72px + env(safe-area-inset-bottom))"}}>
         {tab==="today"   &&!user.isViewer&&<TodayView   {...shared} selEvent={selEvent} setSelEvent={setSelEvent} toggleMyAction={toggleMyAction}/>}
         {tab==="approve" && user.isChief &&<ApproveView gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} setApprovalStatus={setApprovalStatus} submitApproval={submitApproval} getAmount={getAmount} calcBonus={calcBonus} calLoading={calLoading}/>}
-        {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount}/>}
+        {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
         {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
       </div>
 
@@ -555,6 +556,28 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
       <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
         {myActions.map(action=>{
           const on=!!myCheck[action.key];
+          // Observatii — text input
+          if (action.key==="observatii") {
+            const noteVal = typeof myCheck["observatii"]==="string" ? myCheck["observatii"] : "";
+            return (
+              <div key="observatii" style={{borderRadius:14,border:"1px solid #222",background:"#1a1a1a",overflow:"hidden"}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px"}}>
+                  <span style={{fontSize:20}}>📝</span>
+                  <span style={{fontSize:15,color:"#ccc"}}>Observații</span>
+                </div>
+                {!isLocked ? (
+                  <textarea value={noteVal}
+                    onChange={e=>toggleMyAction(selEv.id,"observatii",e.target.value)}
+                    placeholder="Scrie observații..."
+                    rows={3}
+                    style={{width:"100%",padding:"10px 16px",background:"#111",border:"none",borderTop:"1px solid #222",color:"#ccc",fontSize:14,resize:"none",outline:"none",boxSizing:"border-box",fontFamily:"inherit",lineHeight:1.5}}
+                  />
+                ) : noteVal ? (
+                  <div style={{padding:"8px 16px 12px",fontSize:13,color:"#888",fontStyle:"italic",borderTop:"1px solid #222"}}>"{noteVal}"</div>
+                ) : null}
+              </div>
+            );
+          }
           return (
             <div key={action.key} onClick={()=>!isLocked&&toggleMyAction(selEv.id,action.key)}
               style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderRadius:14,border:`1px solid ${on?"#2d5a2d":"#222"}`,background:on?"#1a2e1a":"#1a1a1a",cursor:isLocked?"default":"pointer",opacity:isLocked&&!on?0.35:1,transition:"all 0.1s"}}>
@@ -838,7 +861,7 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
 
 // ─── REPORT VIEW ──────────────────────────────────────────────────────────────
 
-function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount }) {
+function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, eventColors }) {
   const [mode, setMode] = useState("lunar"); // "lunar" | "custom"
   const [rm,   setRm]   = useState(()=>{ const t=new Date(); return new Date(t.getFullYear(),t.getMonth(),1); });
   const [dateFrom, setDateFrom] = useState(toKey(addDays(new Date(),-9)));
@@ -939,11 +962,17 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount }) {
                   {details.map(({ev,acts,total:evT})=>(
                     <div key={ev.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 0",borderBottom:"1px solid #1a1a1a"}}>
                       <div style={{flex:1,marginRight:8}}>
-                        <div style={{fontSize:13,color:"#ccc",fontWeight:500}}>{ev.title}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          {eventColors[ev.originalId||ev.id]&&<div style={{width:8,height:8,borderRadius:"50%",background:eventColors[ev.originalId||ev.id],flexShrink:0}}/>}
+                          <div style={{fontSize:13,color:eventColors[ev.originalId||ev.id]||"#ccc",fontWeight:500}}>{ev.title}</div>
+                        </div>
                         <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
                           <span style={{fontSize:10,color:"#555"}}>{new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</span>
-                          {acts.map(a=><span key={a.key} style={{fontSize:10,padding:"1px 6px",borderRadius:20,background:"#1a2e1a",color:"#4ade80"}}>{a.icon} {a.label}</span>)}
+                          {acts.filter(a=>a.key!=="observatii").map(a=><span key={a.key} style={{fontSize:10,padding:"1px 6px",borderRadius:20,background:"#1a2e1a",color:"#4ade80"}}>{a.icon} {a.label}</span>)}
                         </div>
+                        {typeof getChecked(member.id,ev.id)["observatii"]==="string" && getChecked(member.id,ev.id)["observatii"] && (
+                          <div style={{fontSize:11,color:"#666",fontStyle:"italic",marginTop:3}}>📝 {getChecked(member.id,ev.id)["observatii"]}</div>
+                        )}
                       </div>
                       <span style={{fontSize:14,fontWeight:700,color:"#4ade80",flexShrink:0}}>+{fmtRON(evT)}</span>
                     </div>
