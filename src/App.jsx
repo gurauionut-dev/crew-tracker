@@ -24,13 +24,15 @@ const USER_CONFIG = {
   gabi:   { visibleActions: ["montaj","demontaj","operare","deplasare","asistenta"],          bonuses: { ...DEFAULT_BONUSES } },
 };
 
+// ⚠️  Schimbă parolele după primul login!
+// Parolele sunt stocate în cod — nu folosi parole folosite în altă parte.
 const TEAM = [
-  { id: "ionut",   name: "Ionuț Gurău",      email: "gurauionut@gmail.com",       initials: "IG",  color: "#185FA5", bg: "#E6F1FB", role: "Crew Chief",   isChief: true,  isViewer: false },
-  { id: "daniel",  name: "Stancu Daniel",    email: "danielmarcel1313@gmail.com", initials: "SD",  color: "#27500A", bg: "#EAF3DE", role: "Technician",   isChief: false, isViewer: false },
-  { id: "stefan",  name: "Ștefan Maricescu", email: "barosan.stefy@gmail.com",    initials: "SM",  color: "#633806", bg: "#FAEEDA", role: "Technician",   isChief: false, isViewer: false },
-  { id: "gabi",    name: "Gabi Bugeanu",     email: "fymwithart@gmail.com",       initials: "GB",  color: "#3C3489", bg: "#EEEDFE", role: "Technician",   isChief: false, isViewer: false },
-  { id: "anca",    name: "Anca Gurău",       email: "ancagurau@gmail.com",        initials: "AG",  color: "#72243E", bg: "#FBEAF0", role: "Contabilitate", isChief: false, isViewer: true  },
-  { id: "ionel",   name: "Ionel Gurău",      email: "ionelgurau.ig@gmail.com",    initials: "IG2", color: "#444441", bg: "#F1EFE8", role: "Contabilitate", isChief: false, isViewer: true  },
+  { id: "ionut",   name: "Ionuț Gurău",      email: "gurauionut@gmail.com",       password: "crew2024!",   initials: "IG",  color: "#185FA5", bg: "#E6F1FB", role: "Crew Chief",    isChief: true,  isViewer: false },
+  { id: "daniel",  name: "Stancu Daniel",    email: "danielmarcel1313@gmail.com", password: "daniel2024",  initials: "SD",  color: "#27500A", bg: "#EAF3DE", role: "Technician",    isChief: false, isViewer: false },
+  { id: "stefan",  name: "Ștefan Maricescu", email: "barosan.stefy@gmail.com",    password: "stefan2024",  initials: "SM",  color: "#633806", bg: "#FAEEDA", role: "Technician",    isChief: false, isViewer: false },
+  { id: "gabi",    name: "Gabi Bugeanu",     email: "fymwithart@gmail.com",       password: "gabi2024",    initials: "GB",  color: "#3C3489", bg: "#EEEDFE", role: "Technician",    isChief: false, isViewer: false },
+  { id: "anca",    name: "Anca Gurău",       email: "ancagurau@gmail.com",        password: "anca2024",    initials: "AG",  color: "#72243E", bg: "#FBEAF0", role: "Contabilitate",  isChief: false, isViewer: true  },
+  { id: "ionel",   name: "Ionel Gurău",      email: "ionelgurau.ig@gmail.com",    password: "ionel2024",   initials: "IG2", color: "#444441", bg: "#F1EFE8", role: "Contabilitate",  isChief: false, isViewer: true  },
 ];
 
 const CALENDAR_ID    = "p6khitulp9l3vdrasd5rt4ep68@group.calendar.google.com";
@@ -334,67 +336,125 @@ export default function App() {
   );
 }
 
-// ─── LOGIN WITH EMAIL ─────────────────────────────────────────────────────────
+// ─── LOGIN WITH EMAIL + PASSWORD ──────────────────────────────────────────────
 
 function LoginScreen({ onLogin }) {
-  const [email,  setEmail]  = useState("");
-  const [error,  setError]  = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email,    setEmail]    = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd,  setShowPwd]  = useState(false);
+  const [error,    setError]    = useState("");
+  const [loading,  setLoading]  = useState(false);
+  const [step,     setStep]     = useState("email"); // "email" | "password"
 
-  function handleLogin() {
+  // After typing email, move to password step
+  function handleEmailNext() {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) { setError("Introdu adresa de email."); return; }
     const member = TEAM.find(m => m.email.toLowerCase() === trimmed);
-    if (!member) { setError("Email nerecunoscut. Verifică adresa introdusă."); return; }
+    if (!member) { setError("Email nerecunoscut. Verifică adresa."); return; }
+    setError("");
+    setStep("password");
+  }
+
+  function handleLogin() {
+    const trimmed = email.trim().toLowerCase();
+    const member  = TEAM.find(m => m.email.toLowerCase() === trimmed);
+    if (!member) { setStep("email"); setError("Eroare. Încearcă din nou."); return; }
+    if (password !== member.password) {
+      setError("Parolă incorectă.");
+      setPassword("");
+      return;
+    }
     setLoading(true);
     setTimeout(() => { onLogin(member); setLoading(false); }, 400);
   }
 
-  function handleKey(e) { if (e.key === "Enter") handleLogin(); }
+  function handleKeyEmail(e) { if (e.key === "Enter") handleEmailNext(); }
+  function handleKeyPwd(e)   { if (e.key === "Enter") handleLogin(); }
+
+  function goBack() { setStep("email"); setPassword(""); setError(""); }
+
+  const currentMember = step === "password" ? TEAM.find(m => m.email.toLowerCase() === email.trim().toLowerCase()) : null;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f0f0ef", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ width: "100%", maxWidth: 380, background: "#fff", borderRadius: 20, padding: 32, boxShadow: "0 8px 40px rgba(0,0,0,0.08)" }}>
+
+        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <div style={{ width: 56, height: 56, background: "#185FA5", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", fontSize: 26 }}>⚡</div>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1a1a18", margin: "0 0 6px", letterSpacing: -0.5 }}>Crew Tracker</h1>
-          <p style={{ fontSize: 14, color: "#888", margin: 0 }}>Intră cu adresa ta de email</p>
+          <p style={{ fontSize: 14, color: "#888", margin: 0 }}>
+            {step === "email" ? "Introdu adresa ta de email" : "Introdu parola"}
+          </p>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 12, fontWeight: 600, color: "#666", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={e => { setEmail(e.target.value); setError(""); }}
-            onKeyDown={handleKey}
-            placeholder="adresa@gmail.com"
-            autoFocus
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: error ? "1.5px solid #E24B4A" : "1.5px solid #e0e0de", fontSize: 14, color: "#1a1a18", outline: "none", background: "#fafaf9", boxSizing: "border-box" }}
-          />
-          {error && <div style={{ fontSize: 12, color: "#A32D2D", marginTop: 6 }}>⚠️ {error}</div>}
-        </div>
-
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          style={{ width: "100%", padding: "12px", borderRadius: 12, border: "none", background: loading ? "#aaa" : "#185FA5", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "default" : "pointer", letterSpacing: -0.2 }}
-        >
-          {loading ? "Se verifică..." : "Intră în aplicație →"}
-        </button>
-
-        <div style={{ marginTop: 20, padding: "12px 14px", background: "#f0f0ef", borderRadius: 10 }}>
-          <div style={{ fontSize: 11, color: "#aaa", marginBottom: 6, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Emailuri acceptate</div>
-          {TEAM.map(m => (
-            <div key={m.id} onClick={() => { setEmail(m.email); setError(""); }} style={{ fontSize: 12, color: "#666", padding: "3px 0", cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 18, height: 18, borderRadius: "50%", background: m.bg, color: m.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, flexShrink: 0 }}>{m.initials}</div>
-              <span style={{ flex: 1 }}>{m.email}</span>
-              <span style={{ color: "#bbb", fontSize: 10 }}>{m.role}</span>
+        {/* STEP 1 — Email */}
+        {step === "email" && (
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#666", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(""); }}
+                onKeyDown={handleKeyEmail}
+                placeholder="adresa@gmail.com"
+                autoFocus
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: error ? "1.5px solid #E24B4A" : "1.5px solid #e0e0de", fontSize: 14, color: "#1a1a18", outline: "none", background: "#fafaf9", boxSizing: "border-box" }}
+              />
+              {error && <div style={{ fontSize: 12, color: "#A32D2D", marginTop: 6 }}>⚠️ {error}</div>}
             </div>
-          ))}
-        </div>
+            <button onClick={handleEmailNext}
+              style={{ width: "100%", padding: "12px", borderRadius: 12, border: "none", background: "#185FA5", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
+              Continuă →
+            </button>
+          </>
+        )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#bbb", marginTop: 16, justifyContent: "center" }}>
+        {/* STEP 2 — Password */}
+        {step === "password" && currentMember && (
+          <>
+            {/* Show who is logging in */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: "#E6F1FB", borderRadius: 10, marginBottom: 20 }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: currentMember.bg, color: currentMember.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                {currentMember.initials}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a18" }}>{currentMember.name}</div>
+                <div style={{ fontSize: 11, color: "#888" }}>{currentMember.email}</div>
+              </div>
+              <button onClick={goBack} style={{ fontSize: 11, color: "#185FA5", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>Schimbă</button>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "#666", display: "block", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em" }}>Parolă</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type={showPwd ? "text" : "password"}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(""); }}
+                  onKeyDown={handleKeyPwd}
+                  placeholder="••••••••"
+                  autoFocus
+                  style={{ width: "100%", padding: "12px 44px 12px 14px", borderRadius: 10, border: error ? "1.5px solid #E24B4A" : "1.5px solid #e0e0de", fontSize: 14, color: "#1a1a18", outline: "none", background: "#fafaf9", boxSizing: "border-box" }}
+                />
+                <button onClick={() => setShowPwd(!showPwd)}
+                  style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#aaa", padding: 0 }}>
+                  {showPwd ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {error && <div style={{ fontSize: 12, color: "#A32D2D", marginTop: 6 }}>⚠️ {error}</div>}
+            </div>
+
+            <button onClick={handleLogin} disabled={loading}
+              style={{ width: "100%", padding: "12px", borderRadius: 12, border: "none", background: loading ? "#aaa" : "#185FA5", color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading ? "default" : "pointer" }}>
+              {loading ? "Se verifică..." : "Intră în aplicație →"}
+            </button>
+          </>
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#bbb", marginTop: 20, justifyContent: "center" }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1D9E75", display: "inline-block" }}></span>
           Sincronizat cu Google Calendar
         </div>
