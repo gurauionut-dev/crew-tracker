@@ -34,6 +34,7 @@ const TEAM = [
 
 const CALENDAR_ID    = "p6khitulp9l3vdrasd5rt4ep68@group.calendar.google.com";
 const CALENDAR_EMBED = "https://calendar.google.com/calendar/embed?src=p6khitulp9l3vdrasd5rt4ep68%40group.calendar.google.com&ctz=Europe%2FBucharest";
+const CALENDAR_API_KEY = "AIzaSyAJ49QRmSGj5cDBdKXDjDJZy-Q_3PAsrEg";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -198,17 +199,17 @@ export default function App() {
   useEffect(()=>{ if(user) save("ct_session",user.id); else localStorage.removeItem("ct_session"); },[user]);
 
   useEffect(()=>{
-    if (!apiKey) return;
+
     const from = new Date(day.getFullYear(), day.getMonth()-1, 1);
     const to   = new Date(day.getFullYear(), day.getMonth()+2, 0);
     setCalLoading(true); setCalError(null);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${apiKey}&timeMin=${from.toISOString()}&timeMax=${to.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=500`;
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(CALENDAR_ID)}/events?key=${CALENDAR_API_KEY}&timeMin=${from.toISOString()}&timeMax=${to.toISOString()}&singleEvents=true&orderBy=startTime&maxResults=500`;
     fetch(url).then(r=>r.json()).then(data=>{
       if (data.error) { setCalError(data.error.message); setCalLoading(false); return; }
       setGcalEvents(parseGCalEvents(data.items));
       setCalLoading(false);
     }).catch(e=>{ setCalError(e.message); setCalLoading(false); });
-  },[apiKey, day.getMonth(), day.getFullYear()]);
+  },[day.getMonth(), day.getFullYear()]);
 
   function showToast(msg) { setToast(msg); setTimeout(()=>setToast(null),2500); }
 
@@ -281,8 +282,8 @@ export default function App() {
 
         {/* User */}
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          {!apiKey&&!user.isViewer&&<button onClick={()=>setShowApiSetup(true)} style={{ padding:"4px 10px", borderRadius:7, border:"1px solid #ef4444", background:"transparent", color:"#ef4444", fontSize:11, fontWeight:500, cursor:"pointer" }}>⚠ Calendar</button>}
-          {apiKey&&<span style={{ fontSize:11, color:"#4ade80", fontWeight:500 }}>● Live</span>}
+          
+          <span style={{ fontSize:11, color:"#4ade80", fontWeight:500 }}>● Live</span>
           <Avatar member={user} size={28}/>
           <span style={{ fontSize:13, fontWeight:500, color:"#e8e8e6" }}>{user.name.split(" ")[0]}</span>
           <button onClick={handleLogout} style={{ background:"none", border:"1px solid #333", borderRadius:6, padding:"3px 10px", fontSize:11, color:"#666", cursor:"pointer" }}>Ieși</button>
