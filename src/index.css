@@ -1,29 +1,29 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { height: 100%; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
-  background: #f0f0ef;
-  color: #1a1a18;
-  min-height: 100vh;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #111;
+  color: #e8e8e6;
+  min-height: 100%;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  min-height: 100vh;
-}
+#root { min-height: 100dvh; display: flex; flex-direction: column; }
 
-button {
-  font-family: 'DM Sans', sans-serif;
-}
+button, input { font-family: inherit; }
 
-input {
-  font-family: 'DM Sans', sans-serif;
-}
+/* Smooth scrolling on mobile */
+* { -webkit-overflow-scrolling: touch; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d0d0ce; border-radius: 3px; }
+/* Hide scrollbars but keep scroll */
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+/* Safe area for notch phones */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
