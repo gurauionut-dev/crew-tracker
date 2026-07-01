@@ -81,8 +81,9 @@ async function exportDevizPDF(deviz, catalog) {
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
-  doc.addFileToVFS("Querround.ttf", QUERROUND_B64);
-  doc.addFont("Querround.ttf", "Querround", "normal");
+  try { doc.addFileToVFS("Querround.ttf", QUERROUND_B64); doc.addFont("Querround.ttf", "Querround", "normal"); } catch(e) { console.warn("Font:",e); }
+  // safe text helper
+  function st(v) { return v===null||v===undefined?"":String(v); }
 
   const pw=210, m=14, cw=pw-m*2;
   let y=0;
@@ -102,7 +103,8 @@ async function exportDevizPDF(deviz, catalog) {
 
   // HEADER
   doc.setFillColor(...C.blue); doc.rect(0,0,pw,20,"F");
-  doc.setFont("Querround","normal"); doc.setFontSize(18); doc.setTextColor(...C.white);
+  try { doc.setFont("Querround","normal"); } catch(e) { doc.setFont("helvetica","bold"); }
+  doc.setFontSize(18); doc.setTextColor(...C.white);
   doc.text("ig vision",m,14);
   const lw=doc.getTextWidth("ig vision");
   doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...C.light);
@@ -118,9 +120,9 @@ async function exportDevizPDF(deviz, catalog) {
   // Info
   const labels=["BENEFICIAR:","EVENIMENT:","LOCATIE:","PRODUCTION MANAGER:"];
   const vals=[
-    ro(deviz.client?.nume||deviz.beneficiar||""),
-    ro(deviz.eveniment||""),
-    ro(deviz.locatie||""),
+    ro(st(deviz.client?.nume||deviz.beneficiar||"—")),
+    ro(st(deviz.eveniment||"—")),
+    ro(st(deviz.locatie||"—")),
     ro("IONUT GURAU  0732 302 813"),
   ];
   if (deviz.dateStart) {
@@ -167,7 +169,7 @@ async function exportDevizPDF(deviz, catalog) {
     doc.setFontSize(8); doc.setTextColor(...C.dark); doc.setFont("helvetica","normal");
     let cx=m;
     cols.forEach((col,ci)=>{
-      const val=ro(String(values[ci]||""));
+      const val=ro(st(values[ci]));
       if(col.align==="left") doc.text(val,cx+2,y+5.5);
       else if(col.align==="right") doc.text(val,cx+col.w-2,y+5.5,{align:"right"});
       else doc.text(val,cx+col.w/2,y+5.5,{align:"center"});
