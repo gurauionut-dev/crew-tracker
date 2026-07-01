@@ -322,6 +322,7 @@ export default function DevizeView({ user, gcalEvents }) {
   const [view,     setView]     = useState("list"); // list | edit | catalog | clienti
   const [current,  setCurrent]  = useState(null);
   const [saving,   setSaving]   = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // id to delete
   const [pdfLoad,  setPdfLoad]  = useState(null);
   const [showCat,  setShowCat]  = useState(null); // echip|manop|transp
   const [catEdit,  setCatEdit]  = useState(null); // editing catalog item
@@ -421,8 +422,12 @@ export default function DevizeView({ user, gcalEvents }) {
   }
 
   async function deleteDeviz(id) {
-    if(!confirm("Ștergi devizul?")) return;
-    await deleteDoc(doc(db,"devize",id));
+    setConfirmDelete(id);
+  }
+  async function confirmDeleteDeviz() {
+    if (!confirmDelete) return;
+    await deleteDoc(doc(db,"devize",confirmDelete));
+    setConfirmDelete(null);
   }
 
   async function saveCatalog(newCat) {
@@ -668,6 +673,21 @@ export default function DevizeView({ user, gcalEvents }) {
           );
         })}
       </div>
+
+      {/* Confirm delete modal */}
+      {confirmDelete&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+          <div style={{background:"#1a1a1a",borderRadius:16,padding:24,width:"100%",maxWidth:320,border:"1px solid #5a2020",textAlign:"center"}}>
+            <div style={{fontSize:32,marginBottom:12}}>🗑️</div>
+            <div style={{fontSize:15,fontWeight:600,color:"#e8e8e6",marginBottom:8}}>Ștergi devizul?</div>
+            <div style={{fontSize:13,color:"#888",marginBottom:20}}>Această acțiune nu poate fi anulată.</div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>setConfirmDelete(null)} style={{flex:1,padding:"11px",borderRadius:10,border:"1px solid #333",background:"transparent",color:"#888",fontSize:14,cursor:"pointer"}}>Anulează</button>
+              <button onClick={confirmDeleteDeviz} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"#ef4444",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Șterge</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 

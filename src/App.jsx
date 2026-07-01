@@ -368,8 +368,9 @@ export default function App() {
   const [checked,     setChecked]     = useState({});
   const [approvals,   setApprovals]   = useState({});
   const [eventColors, setEventColors] = useState({});
-  const prevApprovals = useRef({});
-  const prevChecked   = useRef({});
+  const prevApprovals  = useRef({});
+  const prevChecked    = useRef({});
+  const initialLoad    = useRef({ checked: true, approvals: true });
 
   // Session
   useEffect(()=>{ user?save("ct_session",user.id):localStorage.removeItem("ct_session"); },[user]);
@@ -377,6 +378,12 @@ export default function App() {
   // Listen Firebase live
   useEffect(()=>{
     const unsub1 = listenChecked(data=>{
+      if (initialLoad.current.checked) {
+        initialLoad.current.checked = false;
+        prevChecked.current = data;
+        setChecked(data);
+        return;
+      }
       // Notify chief if new actions submitted
       if (user?.isChief) {
         Object.entries(data).forEach(([uid,evMap])=>{
@@ -395,6 +402,12 @@ export default function App() {
       setChecked(data);
     });
     const unsub2 = listenApprovals(data=>{
+      if (initialLoad.current.approvals) {
+        initialLoad.current.approvals = false;
+        prevApprovals.current = data;
+        setApprovals(data);
+        return;
+      }
       // Notify tech if their actions got approved/rejected
       if (user && !user.isChief && !user.isViewer) {
         const myPrev = prevApprovals.current[user.id]||{};
