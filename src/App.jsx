@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { db, saveChecked, saveApproval, listenChecked, listenApprovals, saveEventColor, listenEventColors } from "./firebase";
+import DevizeView from "./Devize";
+import { QUERROUND_B64 } from "./querround_font";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -127,6 +129,13 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
     });
   }
   const { jsPDF } = window.jspdf;
+  // Register Querround font once
+  if (!window._querroundRegistered) {
+    const _tmp = new jsPDF();
+    _tmp.addFileToVFS("Querround.ttf", QUERROUND_B64);
+    _tmp.addFont("Querround.ttf", "Querround", "normal");
+    window._querroundRegistered = true;
+  }
   const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
   const pageW=210, margin=14, colW=210-14*2;
   let y=0;
@@ -139,9 +148,16 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
 
   // Header bar
   doc.setFillColor(...C.headerBg); doc.rect(0,0,pageW,38,"F");
-  doc.setFontSize(22);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("ig vision",margin,19);
-  doc.setFontSize(7);doc.setTextColor(...C.light);doc.text("TM",margin+doc.getTextWidth("ig vision")+1,14);
-  doc.setFontSize(10);doc.setFont("helvetica","normal");doc.text("CREW TRACKER",margin,27);
+  // Logo — Querround font
+  doc.setFont("Querround","normal");
+  doc.setFontSize(22); doc.setTextColor(...C.white);
+  doc.text("ig vision", margin, 19);
+  const logoW = doc.getTextWidth("ig vision");
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(6); doc.setTextColor(...C.light);
+  doc.text("TM", margin + logoW + 0.5, 13);
+  doc.setFontSize(8); doc.setTextColor(...C.light);
+  doc.text("CREW TRACKER", margin, 27);
   doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("Raport "+ro(label),pageW-margin,17,{align:"right"});
   doc.setFontSize(8);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
   doc.text("Generat: "+new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}),pageW-margin,24,{align:"right"});
@@ -292,7 +308,7 @@ function Toast({ msg }) {
 }
 
 function BottomNav({ tabs, tab, setTab, pendingCount }) {
-  const icons = {today:"📅",approve:"✅",report:"📊",settings:"⚙️"};
+  const icons = {today:"📅",approve:"✅",report:"📊",devize:"📋",settings:"⚙️"};
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#1a1a1a",borderTop:"1px solid #2a2a2a",display:"flex",zIndex:50,paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
@@ -492,9 +508,11 @@ export default function App() {
 
   let tabs=[];
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
-  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"settings",label:"Setări"}];
+  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"settings",label:"Setări"}];
   else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"settings",label:"Setări"}];
-  if (user.isViewer&&tab!=="report") setTab("report");
+  if (user.isViewer&&tab!=="report"&&tab!=="devize") setTab("report");
+  // Viewers also get devize tab
+  if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"}];
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
