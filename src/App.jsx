@@ -537,6 +537,8 @@ export default function App() {
         {tab==="approve" && user.isChief &&<ApproveView gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} setApprovalStatus={setApprovalStatus} submitApproval={submitApproval} getAmount={getAmount} calcBonus={calcBonus} calLoading={calLoading}/>}
         {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
         {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
+        {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
+        {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
       </div>
 
       <BottomNav tabs={tabs} tab={tab} setTab={setTab} pendingCount={pending}/>
