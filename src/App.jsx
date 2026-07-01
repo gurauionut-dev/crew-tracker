@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db, saveChecked, saveApproval, listenChecked, listenApprovals, saveEventColor, listenEventColors } from "./firebase";
 import DevizeView from "./Devize";
 import RaportBusiness from "./Raport";
-import { QUERROUND_B64 } from "./querround_font";
+import { LOGO_B64 } from "./logo_igvision";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
@@ -130,13 +130,6 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
     });
   }
   const { jsPDF } = window.jspdf;
-  // Register Querround font once
-  if (!window._querroundRegistered) {
-    const _tmp = new jsPDF();
-    _tmp.addFileToVFS("Querround.ttf", QUERROUND_B64);
-    _tmp.addFont("Querround.ttf", "Querround", "normal");
-    window._querroundRegistered = true;
-  }
   const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
   const pageW=210, margin=14, colW=210-14*2;
   let y=0;
@@ -148,21 +141,15 @@ async function generatePDF(crew, monthEvents, getChecked, getApproval, getAmount
   function checkY(n=10){ if(y+n>275){doc.addPage();y=16;footer();doc.setTextColor(...C.dark);} }
 
   // Header bar
-  doc.setFillColor(...C.headerBg); doc.rect(0,0,pageW,38,"F");
-  // Logo — Querround font
-  doc.setFont("Querround","normal");
-  doc.setFontSize(22); doc.setTextColor(...C.white);
-  doc.text("ig vision", margin, 19);
-  const logoW = doc.getTextWidth("ig vision");
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(6); doc.setTextColor(...C.light);
-  doc.text("TM", margin + logoW + 0.5, 13);
-  doc.setFontSize(8); doc.setTextColor(...C.light);
-  doc.text("CREW TRACKER", margin, 27);
-  doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");doc.text("Raport "+ro(label),pageW-margin,17,{align:"right"});
+  doc.setFillColor(...C.headerBg); doc.rect(0,0,pageW,30,"F");
+  // Logo image
+  doc.addImage(LOGO_B64,"JPEG", margin, 3, 55, 18);
+  // Right side
+  doc.setFontSize(12);doc.setTextColor(...C.white);doc.setFont("helvetica","bold");
+  doc.text("Raport "+ro(label),pageW-margin,14,{align:"right"});
   doc.setFontSize(8);doc.setTextColor(...C.light);doc.setFont("helvetica","normal");
-  doc.text("Generat: "+new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}),pageW-margin,24,{align:"right"});
-  y=46;
+  doc.text("Generat: "+new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}),pageW-margin,21,{align:"right"});
+  y=36;
 
   // Build crew data
   let grandTotal=0;

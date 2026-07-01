@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { QUERROUND_B64 } from "./querround_font";
+import { LOGO_B64 } from "./logo_igvision";
 import {
   collection, doc, setDoc, onSnapshot,
   deleteDoc, serverTimestamp
@@ -81,8 +81,6 @@ async function exportDevizPDF(deviz, catalog) {
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
-  try { doc.addFileToVFS("Querround.ttf", QUERROUND_B64); doc.addFont("Querround.ttf", "Querround", "normal"); } catch(e) { console.warn("Font:",e); }
-  // safe text helper
   function st(v) { return v===null||v===undefined?"":String(v); }
 
   const pw=210, m=14, cw=pw-m*2;
@@ -101,17 +99,14 @@ async function exportDevizPDF(deviz, catalog) {
     doc.text("#ledscreen #ledscreenrental #igvision #events",pw/2,293,{align:"center"});
   }
 
-  // HEADER
-  doc.setFillColor(...C.blue); doc.rect(0,0,pw,20,"F");
-  try { doc.setFont("Querround","normal"); } catch(e) { doc.setFont("helvetica","bold"); }
-  doc.setFontSize(18); doc.setTextColor(...C.white);
-  doc.text("ig vision",m,14);
-  const lw=doc.getTextWidth("ig vision");
-  doc.setFont("helvetica","normal"); doc.setFontSize(6); doc.setTextColor(...C.light);
-  doc.text("TM",m+lw+0.5,8);
-  doc.setFontSize(16); doc.setFont("helvetica","bold"); doc.setTextColor(...C.white);
-  doc.text("RENT",pw/2,13,{align:"center"});
-  y=26;
+  // HEADER — logo image + RENT text
+  doc.setFillColor(30,30,30); doc.rect(0,0,pw,22,"F");
+  // Logo image — left side
+  doc.addImage(LOGO_B64,"JPEG",m,2,55,18);
+  // RENT badge — center
+  doc.setFontSize(18); doc.setFont("helvetica","bold"); doc.setTextColor(...C.white);
+  doc.text("RENT",pw/2,15,{align:"center"});
+  y=28;
 
   // OFERTA title
   doc.setFontSize(15); doc.setTextColor(...C.dark); doc.setFont("helvetica","bold");
