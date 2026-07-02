@@ -79,16 +79,16 @@ function exportDevizPDF(deviz) {
   const discM  = parseFloat(deviz.discountManop||0)/100;
 
   const totE = (deviz.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{
-    return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZile*mult*(1-discE));
+    return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZile*mult);
   },0);
   const totM = (deviz.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>{
-    return s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZile*(1-discM));
+    return s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZile);
   },0);
   const totT = (deviz.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>{
     return s+(parseFloat(r.pret||0)*parseFloat(r.nr||1));
   },0);
   const subtotal  = totE+totM+totT;
-  const afterDisc = totE*(1-discE)+totM*(1-discM)+totT;
+  const afterDisc = totE*(1-discE)+totM*(1-discM)+totT;  // discount only here
   const tva       = afterDisc*0.21;
   const totalGen  = afterDisc+tva;
 
@@ -200,7 +200,7 @@ function exportDevizPDF(deviz) {
         ${echipRows.map((r,i)=>{
           const p=parseFloat(r.pret||r.pretBaza||0);
           const c=parseFloat(r.cantitate||1);
-          const tot=(p*c*nrZile*mult*(1-discE)).toFixed(2);
+          const tot=(p*c*nrZile*mult).toFixed(2);
           return `<tr class="${i%2?"alt":""}">
             <td>${i+1}</td><td class="left">${r.denumire}</td>
             <td>${r.unitate||""}</td><td>${p.toFixed(2)}</td>
@@ -226,7 +226,7 @@ function exportDevizPDF(deviz) {
         ${manopRows.map((r,i)=>{
           const p=parseFloat(r.pret||0);
           const pers=parseFloat(r.persoane||1);
-          const tot=(p*pers*nrZile*(1-discM)).toFixed(2);
+          const tot=(p*pers*nrZile).toFixed(2);
           return `<tr class="${i%2?"alt":""}">
             <td>${i+1}</td><td class="left">${r.specialitate}</td>
             <td>${pers}</td><td>${p.toFixed(2)}</td>
@@ -264,8 +264,8 @@ function exportDevizPDF(deviz) {
   <div class="totals">
     <div class="total-line"><span>VALOARE TOTALĂ</span><span>${subtotal.toFixed(2)} EUR</span></div>
     ${discE>0?`<div class="total-line discount"><span>Discount Echipamente ${deviz.discountEchip}%</span><span>-${(totE*discE).toFixed(2)} EUR</span></div>`:""}
-    ${discM>0?`<div class="total-line discount"><span>Discount Manoperă ${deviz.discountManop}%</span><span>-${(totM*discM/(1-discM)).toFixed(2)} EUR</span></div>`:""}
-    ${discE>0||discM>0?`<div class="total-line after-disc"><span>VALOARE DUPĂ DISCOUNT</span><span>${afterDisc.toFixed(2)} EUR</span></div>`:""}
+    ${discM>0?`<div class="total-line discount"><span>Discount Manoperă ${deviz.discountManop}%</span><span>-${(totM*discM).toFixed(2)} EUR</span></div>`:""}
+    ${discE>0||discM>0?`<div class="total-line after-disc"><span>VALOARE DUPĂ DISCOUNT</span><span>${(totE*(1-discE)+totM*(1-discM)+totT).toFixed(2)} EUR</span></div>`:""}
     <div class="total-line tva"><span>TVA 21%</span><span>${tva.toFixed(2)} EUR</span></div>
     <div class="total-line grand"><span>TOTAL GENERAL</span><span>${totalGen.toFixed(2)} EUR</span></div>
   </div>
