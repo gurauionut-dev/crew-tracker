@@ -168,7 +168,7 @@ function exportDevizPDF(deviz) {
 
   <!-- HEADER -->
   <div class="header">
-    <img src="${LOGO_B64_PLACEHOLDER}" alt="IG Vision"/>
+    <img src="${LOGO_B64}" alt="IG Vision"/>
     <div class="rent">RENT</div>
   </div>
 
@@ -288,11 +288,11 @@ function exportDevizPDF(deviz) {
 </body>
 </html>`;
 
-  // Open in new window
-  const win = window.open("","_blank","width=900,height=700");
+  // Open in new window — must be synchronous for Safari
+  const win = window.open("","_blank");
   if (!win) { alert("Permite pop-up-urile pentru acest site!"); return; }
-  const finalHtml = html.replace("LOGO_B64_PLACEHOLDER", LOGO_B64);
-  win.document.write(finalHtml);
+  win.document.open();
+  win.document.write(html);
   win.document.close();
 }
 
