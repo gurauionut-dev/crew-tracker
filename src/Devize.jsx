@@ -288,12 +288,17 @@ function exportDevizPDF(deviz) {
 </body>
 </html>`;
 
-  // Open in new window — must be synchronous for Safari
-  const win = window.open("","_blank");
-  if (!win) { alert("Permite pop-up-urile pentru acest site!"); return; }
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  // Safari-safe: create blob URL and open via anchor click
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href     = url;
+  a.target   = "_blank";
+  a.rel      = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 
