@@ -71,245 +71,231 @@ function emptyManop()       { return { id:uid(), specialitate:"", persoane:"1", 
 function emptyTransport()   { return { id:uid(), vehicul:"", pret:0, nr:"1", total:0 }; }
 
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
-async function exportDevizPDF(deviz, catalog) {
-  if (!window.jspdf) {
-    await new Promise((res,rej)=>{
-      const s=document.createElement("script");
-      s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-      s.onload=res; s.onerror=rej; document.head.appendChild(s);
-    });
-  }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:"portrait", unit:"mm", format:"a4" });
-  function st(v) { return v===null||v===undefined?"":String(v); }
-
-  const pw=210, m=14, cw=pw-m*2;
-  let y=0;
-  const C={
-    dark:[15,15,15], mid:[50,50,50], gray:[120,120,120], light:[200,200,200],
-    white:[255,255,255], blue:[0,102,204], blueL:[230,240,255],
-    green:[29,158,117], row1:[255,255,255], row2:[245,247,250],
-  };
-
-  function hline(yy){ doc.setDrawColor(...C.light); doc.setLineWidth(0.2); doc.line(m,yy,m+cw,yy); }
-  function checkY(n=10){ if(y+n>275){ doc.addPage(); y=16; footer(); } }
-  function footer(){
-    doc.setFontSize(7.5); doc.setTextColor(...C.gray); doc.setFont("helvetica","normal");
-    doc.text("office@igvision.ro   |   0732302810   |   igvision.ro",pw/2,289,{align:"center"});
-    doc.text("#ledscreen #ledscreenrental #igvision #events",pw/2,293,{align:"center"});
-  }
-
-  // HEADER — logo image + RENT text
-  doc.setFillColor(30,30,30); doc.rect(0,0,pw,22,"F");
-  // Logo image — left side
-  doc.addImage(LOGO_B64,"JPEG",m,2,55,18);
-  // RENT badge — center
-  doc.setFontSize(18); doc.setFont("helvetica","bold"); doc.setTextColor(...C.white);
-  doc.text("RENT",pw/2,15,{align:"center"});
-  y=28;
-
-  // OFERTA title
-  doc.setFontSize(15); doc.setTextColor(...C.dark); doc.setFont("helvetica","bold");
-  doc.text(ro("OFERTA DE PRET"),m,y); y+=8;
-
-  // Info
-  const labels=["BENEFICIAR:","EVENIMENT:","LOCATIE:","PRODUCTION MANAGER:"];
-  const vals=[
-    ro(st(deviz.client?.nume||deviz.beneficiar||"—")),
-    ro(st(deviz.eveniment||"—")),
-    ro(st(deviz.locatie||"—")),
-    ro("IONUT GURAU  0732 302 813"),
-  ];
-  if (deviz.dateStart) {
-    const ds=new Date(deviz.dateStart+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"});
-    const de=deviz.dateEnd?new Date(deviz.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}):"";
-    labels.push("PERIOADA:"); vals.push(de?`${ds} — ${de}`:ds);
-  }
-  labels.forEach((lbl,i)=>{
-    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(...C.dark);
-    doc.text(lbl,m,y);
-    doc.setFont("helvetica","normal");
-    doc.text(vals[i],m+52,y);
-    y+=6;
-  });
-  y+=4;
-
-  // Multiplicator info
+function exportDevizPDF(deviz) {
   const nrZile = calcZile(deviz.dateStart, deviz.dateEnd);
   const mult   = getMultiplier(nrZile);
-  if (nrZile > 1) {
-    doc.setFontSize(8); doc.setTextColor(...C.gray); doc.setFont("helvetica","italic");
-    doc.text(`Durata: ${nrZile} zile (multiplicator ${mult}x aplicat la echipamente)`,m,y);
-    y+=6;
-  }
+  const discE  = parseFloat(deviz.discountEchip||0)/100;
+  const discM  = parseFloat(deviz.discountManop||0)/100;
 
-  // SECTION helpers
-  function sectionHeader(title) {
-    checkY(16);
-    doc.setFillColor(...C.blue); doc.rect(m,y,cw,8,"F");
-    doc.setFontSize(10); doc.setTextColor(...C.white); doc.setFont("helvetica","bold");
-    doc.text(ro(title),pw/2,y+5.5,{align:"center"});
-    y+=8;
-  }
-  function tableHeader(cols) {
-    doc.setFillColor(...C.blueL); doc.rect(m,y,cw,7,"F");
-    doc.setFontSize(7.5); doc.setTextColor(...C.mid); doc.setFont("helvetica","bold");
-    let cx=m; cols.forEach(col=>{ doc.text(ro(col.label),cx+col.w/2,y+5,{align:"center"}); cx+=col.w; });
-    y+=7;
-  }
-  function tableRow(cols, values, i) {
-    const rowH=8;
-    checkY(rowH+1);
-    if(i%2===0){doc.setFillColor(...C.row2); doc.rect(m,y,cw,rowH,"F");}
-    doc.setFontSize(8); doc.setTextColor(...C.dark); doc.setFont("helvetica","normal");
-    let cx=m;
-    cols.forEach((col,ci)=>{
-      const val=ro(st(values[ci]));
-      if(col.align==="left") doc.text(val,cx+2,y+5.5);
-      else if(col.align==="right") doc.text(val,cx+col.w-2,y+5.5,{align:"right"});
-      else doc.text(val,cx+col.w/2,y+5.5,{align:"center"});
-      cx+=col.w;
-    });
-    hline(y+rowH); y+=rowH;
-  }
-  function totalRow(val) {
-    doc.setFillColor(...C.blueL); doc.rect(m,y,cw,8,"F");
-    doc.setFontSize(9); doc.setFont("helvetica","bold");
-    doc.setTextColor(...C.mid); doc.text("Total",m+cw-40,y+5.5,{align:"right"});
-    doc.setTextColor(...C.dark); doc.text(val,m+cw-2,y+5.5,{align:"right"});
-    y+=8;
-  }
-
-  // ECHIPAMENTE
-  const echipRows=(deviz.echipamente||[]).filter(r=>r.denumire);
-  if(echipRows.length>0){
-    sectionHeader("ECHIPAMENTE");
-    const cols=[
-      {label:"Nr.",w:10},{label:"Denumire echipament",w:72,align:"left"},
-      {label:"Unitate",w:20},{label:"Pret EUR/U",w:22},
-      {label:"Cant.",w:18},{label:"Zile",w:14},{label:"Pret total EUR",w:26}
-    ];
-    tableHeader(cols);
-    let tot=0;
-    echipRows.forEach((r,i)=>{
-      const p=parseFloat(r.pret||r.pretBaza||0);
-      const c=parseFloat(r.cantitate||1);
-      const z=nrZile; const m2=mult;
-      const total=p*c*z*m2;
-      tot+=total;
-      tableRow(cols,[i+1,r.denumire,r.unitate,fmtEUR(p),c,z,fmtEUR(total)],i);
-    });
-    y+=2; totalRow(fmtEUR(tot)+" EUR"); y+=4;
-  }
-
-  // MANOPERA
-  const manopRows=(deviz.manopera||[]).filter(r=>r.specialitate);
-  if(manopRows.length>0){
-    sectionHeader("MANOPERA");
-    const cols=[
-      {label:"Nr.",w:10},{label:"Specialitate",w:76,align:"left"},
-      {label:"Pers.",w:18},{label:"Pret EUR/zi",w:22},
-      {label:"Zile",w:14},{label:"Pret total EUR",w:22}
-    ];
-    tableHeader(cols);
-    let tot=0;
-    manopRows.forEach((r,i)=>{
-      const p=parseFloat(r.pret||0);
-      const pers=parseFloat(r.persoane||1);
-      const total=p*pers*nrZile;
-      tot+=total;
-      tableRow(cols,[i+1,r.specialitate,pers,fmtEUR(p),nrZile,fmtEUR(total)],i);
-    });
-    y+=2; totalRow(fmtEUR(tot)+" EUR"); y+=4;
-  }
-
-  // TRANSPORT
-  const transpRows=(deviz.transport||[]).filter(r=>r.vehicul);
-  if(transpRows.length>0){
-    sectionHeader("TRANSPORT");
-    const cols=[
-      {label:"Nr.",w:10},{label:"Tip vehicul",w:80,align:"left"},
-      {label:"Pret EUR",w:26},{label:"Nr.",w:18},{label:"Pret total EUR",w:28}
-    ];
-    tableHeader(cols);
-    let tot=0;
-    transpRows.forEach((r,i)=>{
-      const p=parseFloat(r.pret||0); const nr=parseFloat(r.nr||1);
-      const total=p*nr; tot+=total;
-      tableRow(cols,[i+1,r.vehicul,fmtEUR(p),nr,fmtEUR(total)],i);
-    });
-    y+=2; totalRow(fmtEUR(tot)+" EUR"); y+=4;
-  }
-
-  // TOTALS
-  const totE=(deviz.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{
-    return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZile*mult);
+  const totE = (deviz.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{
+    return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZile*mult*(1-discE));
   },0);
-  const totM=(deviz.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>{
-    return s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZile);
+  const totM = (deviz.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>{
+    return s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZile*(1-discM));
   },0);
-  const totT=(deviz.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>{
+  const totT = (deviz.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>{
     return s+(parseFloat(r.pret||0)*parseFloat(r.nr||1));
   },0);
-  const subtotal=totE+totM+totT;
-  const discE=parseFloat(deviz.discountEchip||0);
-  const discM=parseFloat(deviz.discountManop||0);
-  const valDupDisc=totE*(1-discE/100)+totM*(1-discM/100)+totT;
-  const tva=valDupDisc*0.21;
-  const totalGen=valDupDisc+tva;
+  const subtotal  = totE+totM+totT;
+  const afterDisc = totE*(1-discE)+totM*(1-discM)+totT;
+  const tva       = afterDisc*0.21;
+  const totalGen  = afterDisc+tva;
 
-  checkY(40);
-  y+=2;
+  const dateLabel = deviz.dateStart
+    ? new Date(deviz.dateStart+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})
+      + (deviz.dateEnd&&deviz.dateEnd!==deviz.dateStart
+        ? " — "+new Date(deviz.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})
+        : "")
+    : "";
 
-  // Subtotal
-  doc.setFillColor(240,240,240); doc.rect(m,y,cw,8,"F");
-  doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(...C.mid);
-  doc.text("VALOARE TOTALA",pw/2,y+5.5,{align:"center"});
-  doc.setTextColor(...C.dark); doc.text(fmtEUR(subtotal)+" EUR",m+cw-2,y+5.5,{align:"right"});
-  y+=8;
-
-  // Discounts
-  if(discE>0){
-    doc.setFillColor(245,245,245); doc.rect(m,y,cw,7,"F");
-    doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...C.gray);
-    doc.text(`Discount Echipamente ${discE}%`,pw/2,y+5,{align:"center"});
-    doc.setTextColor([200,50,50]); doc.text(`-${fmtEUR(totE*discE/100)} EUR`,m+cw-2,y+5,{align:"right"});
-    y+=7;
-  }
-  if(discM>0){
-    doc.setFillColor(245,245,245); doc.rect(m,y,cw,7,"F");
-    doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(...C.gray);
-    doc.text(`Discount Manopera ${discM}%`,pw/2,y+5,{align:"center"});
-    doc.setTextColor([200,50,50]); doc.text(`-${fmtEUR(totM*discM/100)} EUR`,m+cw-2,y+5,{align:"right"});
-    y+=7;
+  function rowsHtml(items, cols, getVals) {
+    return items.filter(r=>Object.values(r)[1]).map((r,i)=>`
+      <tr class="${i%2===0?"":"alt"}">
+        ${getVals(r,i).map(v=>`<td>${v??""}</td>`).join("")}
+      </tr>`).join("");
   }
 
-  // Valoare dupa discount
-  if(discE>0||discM>0){
-    doc.setFillColor(240,240,240); doc.rect(m,y,cw,8,"F");
-    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(...C.mid);
-    doc.text("VALOARE DUPA DISCOUNT",pw/2,y+5.5,{align:"center"});
-    doc.setTextColor(...C.dark); doc.text(fmtEUR(valDupDisc)+" EUR",m+cw-2,y+5.5,{align:"right"});
-    y+=8;
+  const echipRows = (deviz.echipamente||[]).filter(r=>r.denumire);
+  const manopRows = (deviz.manopera||[]).filter(r=>r.specialitate);
+  const transpRows= (deviz.transport||[]).filter(r=>r.vehicul);
+
+  const html = `<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8"/>
+<title>Oferta ${deviz.client?.nume||deviz.beneficiar||"IG Vision"}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'DM Sans',sans-serif; font-size:11px; color:#111; background:#fff; }
+  .page { width:210mm; min-height:297mm; margin:0 auto; padding:0; }
+
+  /* HEADER */
+  .header { background:#1a1a1a; padding:10px 14mm; display:flex; align-items:center; justify-content:space-between; }
+  .header img { height:16mm; }
+  .header .rent { color:#fff; font-size:22px; font-weight:700; letter-spacing:2px; }
+
+  /* OFERTA TITLE */
+  .oferta-title { padding:8mm 14mm 4mm; }
+  .oferta-title h1 { font-size:18px; font-weight:700; margin-bottom:6px; }
+  .info-grid { display:grid; grid-template-columns:auto 1fr; gap:3px 12px; }
+  .info-grid .lbl { font-weight:700; font-size:11px; white-space:nowrap; }
+  .info-grid .val { font-size:11px; }
+  .mult-badge { display:inline-block; margin-top:8px; background:#e8f4ff; color:#0066cc; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:600; }
+
+  /* SECTIONS */
+  .section { margin:0 14mm 6mm; }
+  .section-title { background:#0066cc; color:#fff; text-align:center; font-size:11px; font-weight:700; padding:5px; letter-spacing:1px; }
+  table { width:100%; border-collapse:collapse; }
+  thead td, thead th { background:#d9e8ff; font-weight:700; font-size:10px; text-align:center; padding:5px 4px; border:1px solid #c0d4f0; }
+  tbody td { padding:4px 5px; border:1px solid #ddd; font-size:10px; text-align:center; }
+  tbody td.left { text-align:left; }
+  tr.alt td { background:#f5f8ff; }
+  .total-row td { background:#d9e8ff; font-weight:700; font-size:11px; padding:5px; border:1px solid #c0d4f0; }
+
+  /* TOTALS */
+  .totals { margin:0 14mm; }
+  .total-line { display:flex; justify-content:space-between; padding:5px 10px; font-size:11px; border:1px solid #ddd; border-top:none; }
+  .total-line:first-child { border-top:1px solid #ddd; }
+  .total-line.discount { color:#cc0000; }
+  .total-line.after-disc { font-weight:600; }
+  .total-line.tva { }
+  .total-line.grand { background:#0066cc; color:#fff; font-size:14px; font-weight:700; border-color:#0066cc; }
+
+  /* FOOTER */
+  .footer { margin-top:10mm; border-top:1px solid #ddd; padding:6px 14mm; display:flex; justify-content:space-between; align-items:center; }
+  .footer span { font-size:9px; color:#888; }
+
+  @media print {
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .no-print { display:none; }
+    @page { size:A4; margin:0; }
   }
+</style>
+</head>
+<body>
+<div class="page">
 
-  // TVA
-  doc.setFillColor(240,240,240); doc.rect(m,y,cw,8,"F");
-  doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(...C.mid);
-  doc.text("TVA 21%",pw/2,y+5.5,{align:"center"});
-  doc.setTextColor(...C.dark); doc.text(fmtEUR(tva)+" EUR",m+cw-2,y+5.5,{align:"right"});
-  y+=8;
+  <!-- HEADER -->
+  <div class="header">
+    <img src="${LOGO_B64_PLACEHOLDER}" alt="IG Vision"/>
+    <div class="rent">RENT</div>
+  </div>
 
-  // Total general
-  doc.setFillColor(...C.blue); doc.rect(m,y,cw,12,"F");
-  doc.setFontSize(12); doc.setFont("helvetica","bold"); doc.setTextColor(...C.white);
-  doc.text("TOTAL GENERAL",pw/2,y+8,{align:"center"});
-  doc.text(fmtEUR(totalGen)+" EUR",m+cw-2,y+8,{align:"right"});
-  y+=16;
+  <!-- OFERTA TITLE + INFO -->
+  <div class="oferta-title">
+    <h1>OFERTĂ DE PREȚ</h1>
+    <div class="info-grid">
+      <span class="lbl">BENEFICIAR:</span><span class="val">${deviz.client?.nume||deviz.beneficiar||""}</span>
+      <span class="lbl">EVENIMENT:</span><span class="val">${deviz.eveniment||""}</span>
+      <span class="lbl">LOCAȚIE:</span><span class="val">${deviz.locatie||""}</span>
+      <span class="lbl">PRODUCTION MANAGER:</span><span class="val">IONUȚ GURĂU &nbsp; 0732 302 813</span>
+      ${dateLabel?`<span class="lbl">PERIOADĂ:</span><span class="val">${dateLabel}</span>`:""}
+    </div>
+    ${nrZile>1?`<span class="mult-badge">📅 ${nrZile} zile · multiplicator ${mult}x</span>`:""}
+  </div>
 
-  footer();
-  doc.save("deviz-"+ro(deviz.client?.nume||deviz.beneficiar||"igvision").replace(/\s+/g,"-").toLowerCase()+"-"+Date.now()+".pdf");
+  <!-- ECHIPAMENTE -->
+  ${echipRows.length>0?`
+  <div class="section">
+    <div class="section-title">ECHIPAMENTE</div>
+    <table>
+      <thead><tr>
+        <th width="30">Nr.</th><th>Denumire echipament</th>
+        <th width="60">Unitate</th><th width="70">Preț EUR/U</th>
+        <th width="50">Cant.</th><th width="50">Zile</th><th width="80">Preț total EUR</th>
+      </tr></thead>
+      <tbody>
+        ${echipRows.map((r,i)=>{
+          const p=parseFloat(r.pret||r.pretBaza||0);
+          const c=parseFloat(r.cantitate||1);
+          const tot=(p*c*nrZile*mult*(1-discE)).toFixed(2);
+          return `<tr class="${i%2?"alt":""}">
+            <td>${i+1}</td><td class="left">${r.denumire}</td>
+            <td>${r.unitate||""}</td><td>${p.toFixed(2)}</td>
+            <td>${c}</td><td>${nrZile}×${mult}x</td><td>${tot}</td>
+          </tr>`;
+        }).join("")}
+        <tr class="total-row"><td colspan="6" style="text-align:right;padding-right:10px;">Total</td><td>${totE.toFixed(2)} EUR</td></tr>
+      </tbody>
+    </table>
+  </div>`:""}
+
+  <!-- MANOPERĂ -->
+  ${manopRows.length>0?`
+  <div class="section">
+    <div class="section-title">MANOPERĂ</div>
+    <table>
+      <thead><tr>
+        <th width="30">Nr.</th><th>Specialitatea</th>
+        <th width="60">Persoane</th><th width="80">Preț EUR/zi</th>
+        <th width="50">Zile</th><th width="80">Preț total EUR</th>
+      </tr></thead>
+      <tbody>
+        ${manopRows.map((r,i)=>{
+          const p=parseFloat(r.pret||0);
+          const pers=parseFloat(r.persoane||1);
+          const tot=(p*pers*nrZile*(1-discM)).toFixed(2);
+          return `<tr class="${i%2?"alt":""}">
+            <td>${i+1}</td><td class="left">${r.specialitate}</td>
+            <td>${pers}</td><td>${p.toFixed(2)}</td>
+            <td>${nrZile}</td><td>${tot}</td>
+          </tr>`;
+        }).join("")}
+        <tr class="total-row"><td colspan="5" style="text-align:right;padding-right:10px;">Total</td><td>${totM.toFixed(2)} EUR</td></tr>
+      </tbody>
+    </table>
+  </div>`:""}
+
+  <!-- TRANSPORT -->
+  ${transpRows.length>0?`
+  <div class="section">
+    <div class="section-title">TRANSPORT</div>
+    <table>
+      <thead><tr>
+        <th width="30">Nr.</th><th>Tip vehicul</th>
+        <th width="80">Preț EUR</th><th width="60">Nr.</th><th width="80">Preț total EUR</th>
+      </tr></thead>
+      <tbody>
+        ${transpRows.map((r,i)=>{
+          const tot=(parseFloat(r.pret||0)*parseFloat(r.nr||1)).toFixed(2);
+          return `<tr class="${i%2?"alt":""}">
+            <td>${i+1}</td><td class="left">${r.vehicul}</td>
+            <td>${parseFloat(r.pret||0).toFixed(2)}</td><td>${r.nr||1}</td><td>${tot}</td>
+          </tr>`;
+        }).join("")}
+        <tr class="total-row"><td colspan="4" style="text-align:right;padding-right:10px;">Total</td><td>${totT.toFixed(2)} EUR</td></tr>
+      </tbody>
+    </table>
+  </div>`:""}
+
+  <!-- TOTALS -->
+  <div class="totals">
+    <div class="total-line"><span>VALOARE TOTALĂ</span><span>${subtotal.toFixed(2)} EUR</span></div>
+    ${discE>0?`<div class="total-line discount"><span>Discount Echipamente ${deviz.discountEchip}%</span><span>-${(totE*discE).toFixed(2)} EUR</span></div>`:""}
+    ${discM>0?`<div class="total-line discount"><span>Discount Manoperă ${deviz.discountManop}%</span><span>-${(totM*discM/(1-discM)).toFixed(2)} EUR</span></div>`:""}
+    ${discE>0||discM>0?`<div class="total-line after-disc"><span>VALOARE DUPĂ DISCOUNT</span><span>${afterDisc.toFixed(2)} EUR</span></div>`:""}
+    <div class="total-line tva"><span>TVA 21%</span><span>${tva.toFixed(2)} EUR</span></div>
+    <div class="total-line grand"><span>TOTAL GENERAL</span><span>${totalGen.toFixed(2)} EUR</span></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>✉ office@igvision.ro</span>
+    <span>📞 0732302810</span>
+    <span>🌐 igvision.ro</span>
+    <span>#ledscreen #ledscreenrental #igvision #events</span>
+  </div>
+
+</div>
+
+<!-- Print button -->
+<div class="no-print" style="position:fixed;bottom:20px;right:20px;display:flex;gap:10px;">
+  <button onclick="window.print()" style="padding:12px 24px;background:#0066cc;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">🖨 Printează / Save PDF</button>
+  <button onclick="window.close()" style="padding:12px 24px;background:#333;color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;">✕ Închide</button>
+</div>
+
+</body>
+</html>`;
+
+  // Open in new window
+  const win = window.open("","_blank","width=900,height=700");
+  if (!win) { alert("Permite pop-up-urile pentru acest site!"); return; }
+  const finalHtml = html.replace("LOGO_B64_PLACEHOLDER", LOGO_B64);
+  win.document.write(finalHtml);
+  win.document.close();
 }
+
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function DevizeView({ user, gcalEvents }) {
@@ -320,7 +306,6 @@ export default function DevizeView({ user, gcalEvents }) {
   const [current,  setCurrent]  = useState(null);
   const [saving,   setSaving]   = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null); // id to delete
-  const [pdfLoad,  setPdfLoad]  = useState(null);
   const [showCat,  setShowCat]  = useState(null); // echip|manop|transp
   const [catEdit,  setCatEdit]  = useState(null); // editing catalog item
   const [clientEdit, setClientEdit] = useState(null);
@@ -660,8 +645,8 @@ export default function DevizeView({ user, gcalEvents }) {
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8}}>
                 <div style={{fontSize:18,fontWeight:700,color:"#4ade80"}}>{fmtEUR(tot)} EUR</div>
                 <div style={{display:"flex",gap:6}}>
-                  <button onClick={async()=>{setPdfLoad(d.id);try{await exportDevizPDF(d,cat);}catch(e){alert(e.message);}setPdfLoad(null);}} disabled={pdfLoad===d.id}
-                    style={S.btnO("#888")}>{pdfLoad===d.id?"⏳":"📄"}</button>
+                  <button onClick={()=>{exportDevizPDF(d);}}
+                    style={S.btnO("#888")}>"📄"</button>
                   <button onClick={()=>{setCurrent({...d});setView("edit");}} style={S.btnO("#7eb8f7")}>✏️ Edit</button>
                   <button onClick={()=>deleteDeviz(d.id)} style={S.btnO("#ef4444")}>🗑</button>
                 </div>
@@ -703,8 +688,8 @@ export default function DevizeView({ user, gcalEvents }) {
           <option value="sent">Trimis</option>
           <option value="approved">Aprobat</option>
         </select>
-        <button onClick={async()=>{setPdfLoad("cur");try{await exportDevizPDF(current,cat);}catch(e){alert(e.message);}setPdfLoad(null);}} disabled={pdfLoad==="cur"}
-          style={S.btnO("#888")}>{pdfLoad==="cur"?"⏳ PDF...":"📄 PDF"}</button>
+        <button onClick={()=>{exportDevizPDF(current);}}
+          style={S.btnO("#888")}>"📄 PDF"</button>
         <button onClick={saveDeviz} disabled={saving} style={S.btn("#4ade80","#111")}>{saving?"Salvez...":"💾 Salvează"}</button>
       </div>
 
@@ -817,9 +802,9 @@ export default function DevizeView({ user, gcalEvents }) {
           return (
             <div key={r.id} style={{display:"grid",gridTemplateColumns:"2fr 55px 65px 55px 75px 20px",gap:4,marginBottom:6,alignItems:"center"}}>
               <input style={S.inp} value={r.denumire} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],denumire:e.target.value}; return {...p2,echipamente:rows};})} placeholder="Denumire"/>
-              <input style={S.numI} type="number" value={r.cantitate} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],cantitate:e.target.value}; return {...p2,echipamente:rows};})} placeholder="1"/>
-              <input style={S.numI} type="number" value={r.pret||r.pretBaza||""} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p2,echipamente:rows};})} placeholder="0"/>
-              <div style={{...S.numI,background:"transparent",border:"none",color:"#555",fontSize:12,textAlign:"center"}}>{nrZile}×{mult}x</div>
+              <input style={S.numI} type="number" step="0.01" min="0" value={r.cantitate} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],cantitate:e.target.value}; return {...p2,echipamente:rows};})} placeholder="1"/>
+              <input style={S.numI} type="number" step="0.01" min="0" value={r.pret||r.pretBaza||""} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p2,echipamente:rows};})} placeholder="0"/>
+              <div style={{...S.numI,background:"transparent",border:"none",color:"#555",fontSize:11,textAlign:"center"}}>{nrZile}z·{mult}x</div>
               <div style={{...S.numI,background:"transparent",border:"none",color:"#4ade80",fontWeight:600}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p2=>({...p2,echipamente:p2.echipamente.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:14,padding:0}}>✕</button>
             </div>
@@ -860,7 +845,7 @@ export default function DevizeView({ user, gcalEvents }) {
           return (
             <div key={r.id} style={{display:"grid",gridTemplateColumns:"2fr 55px 65px 75px 20px",gap:4,marginBottom:6,alignItems:"center"}}>
               <input style={S.inp} value={r.specialitate} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],specialitate:e.target.value}; return {...p,manopera:rows};})} placeholder="Specialitate"/>
-              <input style={S.numI} type="number" value={r.persoane} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],persoane:e.target.value}; return {...p,manopera:rows};})} placeholder="1"/>
+              <input style={S.numI} type="number" step="0.5" min="0" value={r.persoane} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],persoane:e.target.value}; return {...p,manopera:rows};})} placeholder="1"/>
               <input style={S.numI} type="number" value={r.pret||""} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p,manopera:rows};})} placeholder="0"/>
               <div style={{...S.numI,background:"transparent",border:"none",color:"#4ade80",fontWeight:600}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p=>({...p,manopera:p.manopera.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:14,padding:0}}>✕</button>
@@ -903,7 +888,7 @@ export default function DevizeView({ user, gcalEvents }) {
             <div key={r.id} style={{display:"grid",gridTemplateColumns:"2fr 65px 55px 75px 20px",gap:4,marginBottom:6,alignItems:"center"}}>
               <input style={S.inp} value={r.vehicul} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],vehicul:e.target.value}; return {...p,transport:rows};})} placeholder="Tip vehicul"/>
               <input style={S.numI} type="number" value={r.pret||""} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p,transport:rows};})} placeholder="0"/>
-              <input style={S.numI} type="number" value={r.nr} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],nr:e.target.value}; return {...p,transport:rows};})} placeholder="1"/>
+              <input style={S.numI} type="number" step="0.5" min="0" value={r.nr} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],nr:e.target.value}; return {...p,transport:rows};})} placeholder="1"/>
               <div style={{...S.numI,background:"transparent",border:"none",color:"#4ade80",fontWeight:600}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p=>({...p,transport:p.transport.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:14,padding:0}}>✕</button>
             </div>
