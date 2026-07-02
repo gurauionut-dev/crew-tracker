@@ -72,7 +72,8 @@ function emptyTransport()   { return { id:uid(), vehicul:"", pret:0, nr:"1", tot
 
 // ─── PDF EXPORT ───────────────────────────────────────────────────────────────
 function exportDevizPDF(deviz) {
-  const nrZile = calcZile(deviz.dateStart, deviz.dateEnd);
+  const nrZileAuto = calcZile(deviz.dateStart, deviz.dateEnd);
+  const nrZile     = deviz.nrZileManual ? parseInt(deviz.nrZileManual) : nrZileAuto;
   const mult   = getMultiplier(nrZile);
   const discE  = parseFloat(deviz.discountEchip||0)/100;
   const discM  = parseFloat(deviz.discountManop||0)/100;
@@ -337,11 +338,12 @@ export default function DevizeView({ user, gcalEvents }) {
 
   // ── Calendar events flat list ─────────────────────────────────────────────
   const allCalEvents = Object.values(gcalEvents||{}).flat()
-    .filter((ev,i,arr)=>arr.findIndex(e=>e.originalId===ev.originalId)===i)
-    .sort((a,b)=>a.dayKey?.localeCompare(b.dayKey||"")||0);
+    .filter((ev,i,arr)=>arr.findIndex(e=>(e.originalId||e.id)===(ev.originalId||ev.id))===i)
+    .sort((a,b)=>(b.dayKey||"").localeCompare(a.dayKey||"")); // newest first
 
   // ── Calculated totals ─────────────────────────────────────────────────────
-  const nrZile = current ? calcZile(current.dateStart, current.dateEnd) : 1;
+  const nrZileAuto   = current ? calcZile(current.dateStart, current.dateEnd) : 1;
+  const nrZile       = current?.nrZileManual ? parseInt(current.nrZileManual) : nrZileAuto;
   const mult   = getMultiplier(nrZile);
 
   const totE = (current?.echipamente||[]).reduce((s,r)=>{
@@ -726,8 +728,8 @@ export default function DevizeView({ user, gcalEvents }) {
         {allCalEvents.length>0&&(
           <div style={{marginBottom:14}}>
             <label style={S.lbl}>Selectează din Google Calendar (opțional)</label>
-            <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:140,overflowY:"auto"}}>
-              {allCalEvents.slice(0,20).map(ev=>{
+            <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:220,overflowY:"auto"}}>
+              {allCalEvents.map(ev=>{
                 const sel=current.calEventId===(ev.originalId||ev.id);
                 return (
                   <div key={ev.id} onClick={()=>selectCalendarEvent(ev)}
@@ -769,13 +771,25 @@ export default function DevizeView({ user, gcalEvents }) {
           </div>
         </div>
 
-        {/* Zile + multiplicator indicator */}
-        {current.dateStart&&(
-          <div style={{padding:"8px 12px",background:"#111",borderRadius:9,border:"1px solid #1e3a5f",fontSize:12,color:"#7eb8f7"}}>
-            📅 <strong>{nrZile} {nrZile===1?"zi":"zile"}</strong> → multiplicator <strong>{mult}x</strong> aplicat la echipamente
-            {nrZile===2&&" (2 zile = 1.5x)"}{nrZile===3&&" (3 zile = 2x)"}{nrZile>=7&&" (1 săptămână = 3.5x)"}
+        {/* Zile + multiplicator indicator + manual override */}
+        <div style={{marginTop:4}}>
+          <label style={S.lbl}>Nr. zile devizate <span style={{color:"#555",fontWeight:400,textTransform:"none"}}>(calculat automat din date, modificabil)</span></label>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <input type="number" min="1" step="1"
+              value={current.nrZileManual||nrZileAuto}
+              onChange={e=>setCurrent(p=>({...p,nrZileManual:e.target.value}))}
+              style={{...S.inp,width:80,textAlign:"center",fontWeight:700,fontSize:16}}
+            />
+            <div style={{flex:1,padding:"8px 12px",background:"#111",borderRadius:9,border:"1px solid #1e3a5f",fontSize:12,color:"#7eb8f7"}}>
+              📅 <strong>{nrZile} {nrZile===1?"zi":"zile"}</strong> → multiplicator <strong>{mult}x</strong>
+              {nrZile===1&&" (1zi = 1x)"}{nrZile===2&&" (2zile = 1.5x)"}{nrZile===3&&" (3zile = 2x)"}{nrZile>=7&&" (7zile = 3.5x)"}
+            </div>
+            {current.nrZileManual&&<button onClick={()=>setCurrent(p=>({...p,nrZileManual:null}))}
+              style={{fontSize:11,padding:"4px 8px",borderRadius:6,border:"1px solid #333",background:"transparent",color:"#666",cursor:"pointer",flexShrink:0}}>
+              ↩ Auto
+            </button>}
           </div>
-        )}
+        </div>
       </div>
 
       {/* ECHIPAMENTE */}
