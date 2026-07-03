@@ -138,20 +138,20 @@ export default function RaportBusiness() {
 
   // ── STYLES ────────────────────────────────────────────────────────────────
   const S={
-    sec:  {background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,padding:16,marginBottom:14},
-    secT: {fontSize:12,fontWeight:700,color:"#7eb8f7",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.05em"},
-    card: {background:"#111",border:"1px solid #222",borderRadius:12,padding:"12px 14px",marginBottom:8},
+    sec:  {background:"#fff",border:"1.5px solid #e2eaf5",borderRadius:14,padding:16,marginBottom:14,boxShadow:"0 1px 4px rgba(0,80,200,0.05)"},
+    secT: {fontSize:12,fontWeight:700,color:"#0057cc",marginBottom:12,textTransform:"uppercase",letterSpacing:"0.05em"},
+    card: {background:"#fff",border:"1.5px solid #e2eaf5",borderRadius:12,padding:"12px 14px",marginBottom:8,boxShadow:"0 1px 4px rgba(0,80,200,0.04)"},
   };
 
   return (
-    <div style={{padding:"16px 16px 0",fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{padding:"16px 16px 24px",fontFamily:"'DM Sans',sans-serif",background:"#f0f4fa",minHeight:"100vh"}}>
 
       {/* Period selector */}
       <div style={{display:"flex",gap:6,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:4,background:"#1a1a1a",borderRadius:10,padding:3,border:"1px solid #2a2a2a"}}>
+        <div style={{display:"flex",gap:4,background:"#e8f0ff",borderRadius:10,padding:3,border:"1.5px solid #c0d4f0"}}>
           {["lunar","anual"].map(p=>(
             <button key={p} onClick={()=>setPeriod(p)}
-              style={{padding:"6px 14px",borderRadius:8,border:"none",background:period===p?"#2a2a2a":"transparent",color:period===p?"#e8e8e6":"#555",fontSize:12,fontWeight:period===p?600:400,cursor:"pointer",textTransform:"capitalize"}}>
+              style={{padding:"6px 14px",borderRadius:8,border:"none",background:period===p?"#0057cc":"transparent",color:period===p?"#fff":"#6b7fa3",fontSize:12,fontWeight:period===p?600:400,cursor:"pointer",textTransform:"capitalize"}}>
               {p==="lunar"?"📅 Lunar":"📆 Anual"}
             </button>
           ))}
@@ -159,19 +159,19 @@ export default function RaportBusiness() {
 
         {/* Year selector */}
         <select value={year} onChange={e=>setYear(parseInt(e.target.value))}
-          style={{padding:"7px 10px",borderRadius:9,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:12,cursor:"pointer"}}>
+          style={{padding:"7px 10px",borderRadius:9,border:"1.5px solid #d0daea",background:"#fff",color:"#1a2a3a",fontSize:12,cursor:"pointer"}}>
           {(years.length>0?years:[new Date().getFullYear()]).map(y=><option key={y} value={y}>{y}</option>)}
         </select>
 
         {/* Month selector — only for lunar */}
         {period==="lunar"&&(
           <select value={month} onChange={e=>setMonth(parseInt(e.target.value))}
-            style={{padding:"7px 10px",borderRadius:9,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:12,cursor:"pointer"}}>
+            style={{padding:"7px 10px",borderRadius:9,border:"1.5px solid #d0daea",background:"#fff",color:"#1a2a3a",fontSize:12,cursor:"pointer"}}>
             {LUNI_FULL.map((l,i)=><option key={i+1} value={i+1}>{l}</option>)}
           </select>
         )}
 
-        <div style={{marginLeft:"auto",fontSize:12,color:"#555"}}>{filtered.length} devize în {periodLabel}</div>
+        <div style={{marginLeft:"auto",fontSize:12,color:"#6b7fa3"}}>{filtered.length} devize în {periodLabel}</div>
       </div>
 
       {/* Summary cards */}
@@ -181,9 +181,9 @@ export default function RaportBusiness() {
           {label:"Manoperă",val:totalRevenueManop,icon:"👷",color:"#4ade80"},
           {label:"Transport",val:totalTransport,icon:"🚚",color:"#f59e0b"},
         ].map(({label,val,icon,color})=>(
-          <div key={label} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,padding:"14px 12px"}}>
+          <div key={label} style={{background:"#fff",border:"1.5px solid #e2eaf5",borderRadius:14,padding:"14px 12px",boxShadow:"0 1px 4px rgba(0,80,200,0.05)"}}>
             <div style={{fontSize:20,marginBottom:6}}>{icon}</div>
-            <div style={{fontSize:11,color:"#555",marginBottom:4}}>{label}</div>
+            <div style={{fontSize:11,color:"#6b7fa3",marginBottom:4}}>{label}</div>
             <div style={{fontSize:16,fontWeight:700,color}}>{fmtEUR(val)} EUR</div>
           </div>
         ))}
@@ -193,10 +193,10 @@ export default function RaportBusiness() {
       <div style={{...S.sec,background:"#1a2e1a",border:"1px solid #2d5a2d",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
-            <div style={{fontSize:12,color:"#4ade80",fontWeight:600}}>TOTAL GENERAL (cu TVA)</div>
-            <div style={{fontSize:11,color:"#2d5a2d",marginTop:2}}>{periodLabel}</div>
+            <div style={{fontSize:12,color:"#0057cc",fontWeight:600}}>TOTAL GENERAL (cu TVA)</div>
+            <div style={{fontSize:11,color:"#6b7fa3",marginTop:2}}>{periodLabel}</div>
           </div>
-          <div style={{fontSize:28,fontWeight:700,color:"#4ade80"}}>{fmtEUR(totalGeneral)} EUR</div>
+          <div style={{fontSize:28,fontWeight:700,color:"#0057cc"}}>{fmtEUR(totalGeneral)} EUR</div>
         </div>
       </div>
 
@@ -210,13 +210,13 @@ export default function RaportBusiness() {
               const isSelected=false;
               return (
                 <div key={luna} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-                  <div style={{fontSize:9,color:"#4ade80",fontWeight:600,height:14,display:"flex",alignItems:"center"}}>
+                  <div style={{fontSize:9,color:"#0057cc",fontWeight:600,height:14,display:"flex",alignItems:"center"}}>
                     {rev>0?`${Math.round(rev/1000)}k`:""}
                   </div>
-                  <div style={{width:"100%",height:`${h}%`,background:rev>0?"#4ade80":"#222",borderRadius:"3px 3px 0 0",minHeight:4,position:"relative"}}>
-                    {nrDevize>0&&<div style={{position:"absolute",top:-16,left:"50%",transform:"translateX(-50%)",fontSize:8,color:"#555",whiteSpace:"nowrap"}}>{nrDevize}d</div>}
+                  <div style={{width:"100%",height:`${h}%`,background:rev>0?"#0057cc":"#e2eaf5",borderRadius:"3px 3px 0 0",minHeight:4,position:"relative"}}>
+                    {nrDevize>0&&<div style={{position:"absolute",top:-16,left:"50%",transform:"translateX(-50%)",fontSize:8,color:"#6b7fa3",whiteSpace:"nowrap"}}>{nrDevize}d</div>}
                   </div>
-                  <div style={{fontSize:9,color:"#555"}}>{luna}</div>
+                  <div style={{fontSize:9,color:"#6b7fa3"}}>{luna}</div>
                 </div>
               );
             })}
@@ -225,10 +225,10 @@ export default function RaportBusiness() {
       )}
 
       {/* Tab switcher */}
-      <div style={{display:"flex",gap:4,background:"#1a1a1a",borderRadius:10,padding:3,border:"1px solid #2a2a2a",marginBottom:16}}>
+      <div style={{display:"flex",gap:4,background:"#e8f0ff",borderRadius:10,padding:3,border:"1.5px solid #c0d4f0",marginBottom:16}}>
         {[{id:"echip",label:"🖥️ Echipamente"},{id:"manop",label:"👷 Manoperă"},{id:"overview",label:"📋 Devize"}].map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)}
-            style={{flex:1,padding:"7px 4px",borderRadius:8,border:"none",background:tab===t.id?"#2a2a2a":"transparent",color:tab===t.id?"#e8e8e6":"#555",fontSize:12,fontWeight:tab===t.id?600:400,cursor:"pointer"}}>
+            style={{flex:1,padding:"7px 4px",borderRadius:8,border:"none",background:tab===t.id?"#0057cc":"transparent",color:tab===t.id?"#fff":"#6b7fa3",fontSize:12,fontWeight:tab===t.id?600:400,cursor:"pointer"}}>
             {t.label}
           </button>
         ))}
@@ -238,9 +238,9 @@ export default function RaportBusiness() {
       {tab==="echip"&&(
         <div>
           {echipList.length===0&&(
-            <div style={{textAlign:"center",padding:"40px 0",color:"#444"}}>
+            <div style={{textAlign:"center",padding:"40px 0",color:"#6b7fa3"}}>
               <div style={{fontSize:32,marginBottom:8}}>📭</div>
-              <div style={{fontSize:14}}>Nicio dată pentru perioada selectată</div>
+              <div style={{fontSize:14,color:"#1a2a3a"}}>Nicio dată pentru perioada selectată</div>
               <div style={{fontSize:12,color:"#555",marginTop:4}}>Doar devizele cu status Trimis sau Aprobat sunt incluse</div>
             </div>
           )}
@@ -253,23 +253,23 @@ export default function RaportBusiness() {
                 <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                      <span style={{fontSize:11,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:700}}>#{i+1}</span>
-                      <span style={{fontSize:14,fontWeight:500,color:"#e8e8e6"}}>{e.denumire}</span>
+                      <span style={{fontSize:11,background:"#e8f0ff",color:"#0057cc",padding:"1px 7px",borderRadius:20,fontWeight:700}}>#{i+1}</span>
+                      <span style={{fontSize:14,fontWeight:500,color:"#1a2a3a"}}>{e.denumire}</span>
                     </div>
-                    <div style={{display:"flex",gap:12,fontSize:12,color:"#555",marginTop:2}}>
+                    <div style={{display:"flex",gap:12,fontSize:12,color:"#6b7fa3",marginTop:2}}>
                       <span>{e.nrDevize} devize</span>
-                      {isMp&&<span style={{color:"#7eb8f7",fontWeight:600}}>{fmtNum(e.totalCant)} mp·zile</span>}
-                      {!isMp&&<span style={{color:"#7eb8f7",fontWeight:600}}>{fmtNum(e.totalCant)} {e.unitate}·zile</span>}
+                      {isMp&&<span style={{color:"#0057cc",fontWeight:600}}>{fmtNum(e.totalCant)} mp·zile</span>}
+                      {!isMp&&<span style={{color:"#0057cc",fontWeight:600}}>{fmtNum(e.totalCant)} {e.unitate}·zile</span>}
                     </div>
                   </div>
                   <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
-                    <div style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>{fmtEUR(e.totalRevenue)} EUR</div>
-                    <div style={{fontSize:11,color:"#555"}}>{pct.toFixed(1)}% din total</div>
+                    <div style={{fontSize:16,fontWeight:700,color:"#0057cc"}}>{fmtEUR(e.totalRevenue)} EUR</div>
+                    <div style={{fontSize:11,color:"#6b7fa3"}}>{pct.toFixed(1)}% din total</div>
                   </div>
                 </div>
                 {/* Progress bar */}
-                <div style={{height:4,background:"#222",borderRadius:2,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#7eb8f7,#4ade80)",borderRadius:2}}/>
+                <div style={{height:4,background:"#e2eaf5",borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#0057cc,#4ade80)",borderRadius:2}}/>
                 </div>
               </div>
             );
@@ -279,12 +279,12 @@ export default function RaportBusiness() {
             <div style={{...S.sec,marginTop:8}}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
                 <span style={{color:"#888"}}>Total revenue echipamente</span>
-                <span style={{fontWeight:700,color:"#7eb8f7"}}>{fmtEUR(totalRevenueEchip)} EUR</span>
+                <span style={{fontWeight:700,color:"#0057cc"}}>{fmtEUR(totalRevenueEchip)} EUR</span>
               </div>
               {echipList.filter(e=>e.unitate==="mp").length>0&&(
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginTop:6}}>
                   <span style={{color:"#888"}}>Total mp·zile închiriate</span>
-                  <span style={{fontWeight:700,color:"#7eb8f7"}}>
+                  <span style={{fontWeight:700,color:"#0057cc"}}>
                     {fmtNum(echipList.filter(e=>e.unitate==="mp").reduce((s,e)=>s+e.totalCant,0))} mp·zile
                   </span>
                 </div>
@@ -298,9 +298,9 @@ export default function RaportBusiness() {
       {tab==="manop"&&(
         <div>
           {manopList.length===0&&(
-            <div style={{textAlign:"center",padding:"40px 0",color:"#444"}}>
+            <div style={{textAlign:"center",padding:"40px 0",color:"#6b7fa3"}}>
               <div style={{fontSize:32,marginBottom:8}}>📭</div>
-              <div style={{fontSize:14}}>Nicio dată pentru perioada selectată</div>
+              <div style={{fontSize:14,color:"#1a2a3a"}}>Nicio dată pentru perioada selectată</div>
             </div>
           )}
 
@@ -311,21 +311,21 @@ export default function RaportBusiness() {
                 <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                      <span style={{fontSize:11,background:"#1a2e1a",color:"#4ade80",padding:"1px 7px",borderRadius:20,fontWeight:700}}>#{i+1}</span>
-                      <span style={{fontSize:14,fontWeight:500,color:"#e8e8e6"}}>{m.specialitate}</span>
+                      <span style={{fontSize:11,background:"#e8f5ee",color:"#1a7a4a",padding:"1px 7px",borderRadius:20,fontWeight:700}}>#{i+1}</span>
+                      <span style={{fontSize:14,fontWeight:500,color:"#1a2a3a"}}>{m.specialitate}</span>
                     </div>
-                    <div style={{display:"flex",gap:12,fontSize:12,color:"#555",marginTop:2}}>
+                    <div style={{display:"flex",gap:12,fontSize:12,color:"#6b7fa3",marginTop:2}}>
                       <span>{m.nrDevize} devize</span>
-                      <span style={{color:"#4ade80",fontWeight:600}}>{fmtNum(m.totalPersZile)} pers·zile</span>
+                      <span style={{color:"#1a7a4a",fontWeight:600}}>{fmtNum(m.totalPersZile)} pers·zile</span>
                     </div>
                   </div>
                   <div style={{textAlign:"right",flexShrink:0,marginLeft:8}}>
-                    <div style={{fontSize:16,fontWeight:700,color:"#4ade80"}}>{fmtEUR(m.totalRevenue)} EUR</div>
-                    <div style={{fontSize:11,color:"#555"}}>{pct.toFixed(1)}% din total</div>
+                    <div style={{fontSize:16,fontWeight:700,color:"#0057cc"}}>{fmtEUR(m.totalRevenue)} EUR</div>
+                    <div style={{fontSize:11,color:"#6b7fa3"}}>{pct.toFixed(1)}% din total</div>
                   </div>
                 </div>
-                <div style={{height:4,background:"#222",borderRadius:2,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#4ade80,#86efac)",borderRadius:2}}/>
+                <div style={{height:4,background:"#e2eaf5",borderRadius:2,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#1a7a4a,#4ade80)",borderRadius:2}}/>
                 </div>
               </div>
             );
@@ -335,17 +335,17 @@ export default function RaportBusiness() {
             <div style={S.sec}>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
                 <span style={{color:"#888"}}>Total revenue manoperă</span>
-                <span style={{fontWeight:700,color:"#4ade80"}}>{fmtEUR(totalRevenueManop)} EUR</span>
+                <span style={{fontWeight:700,color:"#0057cc"}}>{fmtEUR(totalRevenueManop)} EUR</span>
               </div>
               <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginTop:6}}>
                 <span style={{color:"#888"}}>Total pers·zile lucrate</span>
-                <span style={{fontWeight:700,color:"#4ade80"}}>
+                <span style={{fontWeight:700,color:"#0057cc"}}>
                   {fmtNum(manopList.reduce((s,m)=>s+m.totalPersZile,0))} pers·zile
                 </span>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginTop:6,paddingTop:8,borderTop:"1px solid #222"}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:13,marginTop:6,paddingTop:8,borderTop:"1.5px solid #e2eaf5"}}>
                 <span style={{color:"#888"}}>% din total venituri</span>
-                <span style={{fontWeight:700,color:"#4ade80"}}>
+                <span style={{fontWeight:700,color:"#0057cc"}}>
                   {totalGeneral>0?((totalRevenueManop/(totalGeneral/1.21))*100).toFixed(1):0}%
                 </span>
               </div>
@@ -358,9 +358,9 @@ export default function RaportBusiness() {
       {tab==="overview"&&(
         <div>
           {filtered.length===0&&(
-            <div style={{textAlign:"center",padding:"40px 0",color:"#444"}}>
+            <div style={{textAlign:"center",padding:"40px 0",color:"#6b7fa3"}}>
               <div style={{fontSize:32,marginBottom:8}}>📭</div>
-              <div style={{fontSize:14}}>Niciun deviz în {periodLabel}</div>
+              <div style={{fontSize:14,color:"#1a2a3a"}}>Niciun deviz în {periodLabel}</div>
             </div>
           )}
           {filtered.map(d=>{
@@ -377,21 +377,21 @@ export default function RaportBusiness() {
               <div key={d.id} style={S.card}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:500,color:"#e8e8e6"}}>{d.client?.nume||d.beneficiar||"—"}</div>
-                    <div style={{fontSize:12,color:"#555",marginTop:1}}>{d.eveniment||""}{d.locatie?` · ${d.locatie}`:""}</div>
-                    {d.dateStart&&<div style={{fontSize:11,color:"#555",marginTop:1}}>
+                    <div style={{fontSize:14,fontWeight:500,color:"#1a2a3a"}}>{d.client?.nume||d.beneficiar||"—"}</div>
+                    <div style={{fontSize:12,color:"#6b7fa3",marginTop:1}}>{d.eveniment||""}{d.locatie?` · ${d.locatie}`:""}</div>
+                    {d.dateStart&&<div style={{fontSize:11,color:"#6b7fa3",marginTop:1}}>
                       📅 {new Date(d.dateStart+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}{d.dateEnd&&d.dateEnd!==d.dateStart?" → "+new Date(d.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"}):""} · {nrZ} zile
                     </div>}
                   </div>
-                  <span style={{fontSize:10,background:sbg,color:sc,padding:"2px 8px",borderRadius:20,fontWeight:600,marginLeft:8,flexShrink:0}}>
+                  <span style={{fontSize:10,background:sbg,color:sc,padding:"3px 9px",borderRadius:20,fontWeight:700,marginLeft:8,flexShrink:0}}>
                     {d.status==="approved"?"Aprobat":d.status==="sent"?"Trimis":"Draft"}
                   </span>
                 </div>
-                <div style={{display:"flex",gap:10,fontSize:11,color:"#555",marginTop:6,flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:10,fontSize:11,color:"#6b7fa3",marginTop:6,flexWrap:"wrap"}}>
                   <span>🖥️ {fmtEUR(tE)} EUR</span>
                   <span>👷 {fmtEUR(tM)} EUR</span>
                   <span>🚚 {fmtEUR(tT)} EUR</span>
-                  <span style={{marginLeft:"auto",fontSize:14,fontWeight:700,color:"#4ade80"}}>{fmtEUR(tot)} EUR</span>
+                  <span style={{marginLeft:"auto",fontSize:14,fontWeight:700,color:"#0057cc"}}>{fmtEUR(tot)} EUR</span>
                 </div>
               </div>
             );
