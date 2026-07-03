@@ -62,20 +62,21 @@ export default function RaportBusiness() {
   // ── EQUIPMENT STATS ───────────────────────────────────────────────────────
   const echipStats = {};
   filtered.forEach(d=>{
-    const nrZ=calcZile(d.dateStart,d.dateEnd);
-    const mult=getMultiplier(nrZ);
+    const nrZileGlobal=d.nrZileManual?parseInt(d.nrZileManual):calcZile(d.dateStart,d.dateEnd);
     const discE=parseFloat(d.discountEchip||0)/100;
     ;(d.echipamente||[]).filter(r=>r.denumire).forEach(r=>{
       const key=r.denumire;
       const cant=parseFloat(r.cantitate||1);
       const pret=parseFloat(r.pret||r.pretBaza||0);
       const unitate=r.unitate||"item";
-      const revenue=pret*cant*nrZ*mult*(1-discE);
-      if (!echipStats[key]) echipStats[key]={denumire:key,unitate,totalCant:0,totalRevenue:0,nrDevize:0,zileTotale:0};
-      echipStats[key].totalCant  += cant*nrZ*mult; // mp × zile × mult
+      // Use per-row zile, fall back to global
+      const rz=parseFloat(r.zile||nrZileGlobal||1);
+      const rm=getMultiplier(rz);
+      const revenue=pret*cant*rz*rm*(1-discE);
+      if (!echipStats[key]) echipStats[key]={denumire:key,unitate,totalCant:0,totalRevenue:0,nrDevize:0};
+      echipStats[key].totalCant    += cant*rz; // mp × zile efectiv devizate
       echipStats[key].totalRevenue += revenue;
-      echipStats[key].nrDevize   += 1;
-      echipStats[key].zileTotale += nrZ;
+      echipStats[key].nrDevize     += 1;
     });
   });
   const echipList = Object.values(echipStats).sort((a,b)=>b.totalRevenue-a.totalRevenue);
@@ -84,15 +85,15 @@ export default function RaportBusiness() {
   // ── MANOPERA STATS ────────────────────────────────────────────────────────
   const manopStats = {};
   filtered.forEach(d=>{
-    const nrZ=calcZile(d.dateStart,d.dateEnd);
     const discM=parseFloat(d.discountManop||0)/100;
     ;(d.manopera||[]).filter(r=>r.specialitate).forEach(r=>{
       const key=r.specialitate;
       const pers=parseFloat(r.persoane||1);
       const pret=parseFloat(r.pret||0);
-      const revenue=pret*pers*nrZ*(1-discM);
+      const mz=parseFloat(r.zile||1); // per-row zile
+      const revenue=pret*pers*mz*(1-discM);
       if (!manopStats[key]) manopStats[key]={specialitate:key,totalPersZile:0,totalRevenue:0,nrDevize:0};
-      manopStats[key].totalPersZile += pers*nrZ;
+      manopStats[key].totalPersZile += pers*mz;
       manopStats[key].totalRevenue  += revenue;
       manopStats[key].nrDevize      += 1;
     });
@@ -107,12 +108,11 @@ export default function RaportBusiness() {
 
   // ── OVERVIEW ──────────────────────────────────────────────────────────────
   const totalGeneral = filtered.reduce((d,dev)=>{
-    const nrZ=calcZile(dev.dateStart,dev.dateEnd);
-    const mult=getMultiplier(nrZ);
+    const nrZg=dev.nrZileManual?parseInt(dev.nrZileManual):calcZile(dev.dateStart,dev.dateEnd);
     const dE=parseFloat(dev.discountEchip||0)/100;
     const dM=parseFloat(dev.discountManop||0)/100;
-    const tE=(dev.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZ*mult*(1-dE)),0);
-    const tM=(dev.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZ*(1-dM)),0);
+    const tE=(dev.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
+    const tM=(dev.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
     const tT=(dev.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
     return d+(tE+tM+tT)*1.21;
   },0);
@@ -122,12 +122,11 @@ export default function RaportBusiness() {
     const m=i+1;
     const monthDevize=devize.filter(d=>getYear(d)===year&&getMonth(d)===m);
     const rev=monthDevize.reduce((s,d)=>{
-      const nrZ=calcZile(d.dateStart,d.dateEnd);
-      const mult=getMultiplier(nrZ);
+      const nrZg=d.nrZileManual?parseInt(d.nrZileManual):calcZile(d.dateStart,d.dateEnd);
       const dE=parseFloat(d.discountEchip||0)/100;
       const dM=parseFloat(d.discountManop||0)/100;
-      const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((ss,r)=>ss+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZ*mult*(1-dE)),0);
-      const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((ss,r)=>ss+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZ*(1-dM)),0);
+      const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((ss,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return ss+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
+      const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((ss,r)=>ss+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
       const tT=(d.transport||[]).filter(r=>r.vehicul).reduce((ss,r)=>ss+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
       return s+(tE+tM+tT);
     },0);
@@ -365,12 +364,11 @@ export default function RaportBusiness() {
             </div>
           )}
           {filtered.map(d=>{
-            const nrZ=calcZile(d.dateStart,d.dateEnd);
-            const mult=getMultiplier(nrZ);
+            const nrZg=d.nrZileManual?parseInt(d.nrZileManual):calcZile(d.dateStart,d.dateEnd);
             const dE=parseFloat(d.discountEchip||0)/100;
             const dM=parseFloat(d.discountManop||0)/100;
-            const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*nrZ*mult*(1-dE)),0);
-            const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*nrZ*(1-dM)),0);
+            const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
+            const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
             const tT=(d.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
             const tot=(tE+tM+tT)*1.21;
             const sColors={draft:["#2a2000","#f59e0b"],sent:["#1e3a5f","#7eb8f7"],approved:["#1a2e1a","#4ade80"]};
