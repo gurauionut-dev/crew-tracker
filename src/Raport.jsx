@@ -34,7 +34,7 @@ const LUNI_FULL = ["Ianuarie","Februarie","Martie","Aprilie","Mai","Iunie","Iuli
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function RaportBusiness() {
   const [devize, setDevize] = useState([]);
-  const [tab,    setTab]    = useState("echip"); // echip | manop | overview
+  const [tab,    setTab]    = useState("echip"); // echip | manop
   const [period, setPeriod] = useState("lunar");  // lunar | anual
   const [year,   setYear]   = useState(new Date().getFullYear());
   const [month,  setMonth]  = useState(new Date().getMonth()+1);
@@ -226,7 +226,7 @@ export default function RaportBusiness() {
 
       {/* Tab switcher */}
       <div style={{display:"flex",gap:4,background:"#e8f0ff",borderRadius:10,padding:3,border:"1.5px solid #c0d4f0",marginBottom:16}}>
-        {[{id:"echip",label:"🖥️ Echipamente"},{id:"manop",label:"👷 Manoperă"},{id:"overview",label:"📋 Devize"}].map(t=>(
+        {[{id:"echip",label:"🖥️ Echipamente"},{id:"manop",label:"👷 Manoperă"}].map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)}
             style={{flex:1,padding:"7px 4px",borderRadius:8,border:"none",background:tab===t.id?"#0057cc":"transparent",color:tab===t.id?"#fff":"#6b7fa3",fontSize:12,fontWeight:tab===t.id?600:400,cursor:"pointer"}}>
             {t.label}
@@ -355,48 +355,7 @@ export default function RaportBusiness() {
       )}
 
       {/* ── DEVIZE OVERVIEW TAB ─────────────────────────────────────────── */}
-      {tab==="overview"&&(
-        <div>
-          {filtered.length===0&&(
-            <div style={{textAlign:"center",padding:"40px 0",color:"#6b7fa3"}}>
-              <div style={{fontSize:32,marginBottom:8}}>📭</div>
-              <div style={{fontSize:14,color:"#1a2a3a"}}>Niciun deviz în {periodLabel}</div>
-            </div>
-          )}
-          {filtered.map(d=>{
-            const nrZg=d.nrZileManual?parseInt(d.nrZileManual):calcZile(d.dateStart,d.dateEnd);
-            const dE=parseFloat(d.discountEchip||0)/100;
-            const dM=parseFloat(d.discountManop||0)/100;
-            const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
-            const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
-            const tT=(d.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
-            const tot=(tE+tM+tT)*1.21;
-            const sColors={draft:["#2a2000","#f59e0b"],sent:["#1e3a5f","#7eb8f7"],approved:["#1a2e1a","#4ade80"]};
-            const [sbg,sc]=sColors[d.status||"draft"];
-            return (
-              <div key={d.id} style={S.card}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:500,color:"#1a2a3a"}}>{d.client?.nume||d.beneficiar||"—"}</div>
-                    <div style={{fontSize:12,color:"#6b7fa3",marginTop:1}}>{d.eveniment||""}{d.locatie?` · ${d.locatie}`:""}</div>
-                    {d.dateStart&&<div style={{fontSize:11,color:"#6b7fa3",marginTop:1}}>
-                      📅 {new Date(d.dateStart+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}{d.dateEnd&&d.dateEnd!==d.dateStart?" → "+new Date(d.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"}):""} · {nrZ} zile
-                    </div>}
-                  </div>
-                  <span style={{fontSize:10,background:sbg,color:sc,padding:"3px 9px",borderRadius:20,fontWeight:700,marginLeft:8,flexShrink:0}}>
-                    {d.status==="approved"?"Aprobat":d.status==="sent"?"Trimis":"Draft"}
-                  </span>
-                </div>
-                <div style={{display:"flex",gap:10,fontSize:11,color:"#6b7fa3",marginTop:6,flexWrap:"wrap"}}>
-                  <span>🖥️ {fmtEUR(tE)} EUR</span>
-                  <span>👷 {fmtEUR(tM)} EUR</span>
-                  <span>🚚 {fmtEUR(tT)} EUR</span>
-                  <span style={{marginLeft:"auto",fontSize:14,fontWeight:700,color:"#0057cc"}}>{fmtEUR(tot)} EUR</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
       )}
 
       <div style={{height:20}}/>
