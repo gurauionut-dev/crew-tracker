@@ -317,8 +317,14 @@ export default function DevizeView({ user, gcalEvents }) {
                transition:"border-color 0.15s"};
   const numI= {...inp,textAlign:"right"};
   const lbl = {fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:5,display:"block"};
-  const card= {background:C.card,border:`1.5px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12,boxShadow:"0 1px 4px rgba(0,80,200,0.05)"};
-  const secT= {fontSize:11,fontWeight:700,color:C.blue,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.08em"};
+  const card= {background:C.card,border:`1.5px solid ${C.border}`,borderRadius:12,padding:16,marginBottom:12,boxShadow:"0 2px 8px rgba(0,80,200,0.07)"};
+  const cardClient   = {...card, borderLeft:"4px solid #0057cc"};
+  const cardCalendar = {...card, borderLeft:"4px solid #1a7a4a"};
+  const cardEchip    = {...card, borderLeft:"4px solid #0057cc"};
+  const cardManop    = {...card, borderLeft:"4px solid #7c3aed"};
+  const cardTransp   = {...card, borderLeft:"4px solid #b45309"};
+  const cardDiscount = {...card, borderLeft:"4px solid #1a7a4a"};
+  const secT= {fontSize:12,fontWeight:700,color:C.blue,marginBottom:14,textTransform:"uppercase",letterSpacing:"0.08em",display:"flex",alignItems:"center",gap:8};
   const btnP= {padding:"9px 18px",borderRadius:8,border:"none",background:C.blue,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 1px 6px rgba(0,87,204,0.2)"};
   const btnS= {padding:"8px 16px",borderRadius:8,border:`1.5px solid ${C.border}`,background:C.card,color:C.sub,fontSize:13,cursor:"pointer",fontFamily:"inherit"};
   const btnG= {padding:"8px 16px",borderRadius:8,border:"none",background:C.green,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"};
@@ -530,9 +536,9 @@ export default function DevizeView({ user, gcalEvents }) {
         <button onClick={saveDeviz} disabled={saving} style={btnG}>{saving?"Salvez...":"💾 Salvează"}</button>
       </div>
 
-      {/* CLIENT */}
-      <div style={card}>
-        <div style={secT}>👤 Client</div>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4}}>01 · Client</div>
+      <div style={cardClient}>
+        <div style={{...secT,color:"#0057cc"}}>👤 Client</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
           {clienti.map(c=>(
             <button key={c.id} onClick={()=>selectClient(c)}
@@ -551,9 +557,9 @@ export default function DevizeView({ user, gcalEvents }) {
         </div>}
       </div>
 
-      {/* EVENIMENTE DIN CALENDAR */}
-      <div style={card}>
-        <div style={secT}>📅 Evenimente din Calendar</div>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>02 · Eveniment & Date</div>
+      <div style={cardCalendar}>
+        <div style={{...secT,color:"#1a7a4a"}}>📅 Evenimente din Calendar</div>
         {allCalEvents.length===0&&<div style={{fontSize:12,color:C.sub,padding:"8px 0"}}>Niciun eveniment în ultimele 30 zile / următoarele 10 zile</div>}
         {allCalEvents.length>0&&(
           <div style={{display:"flex",flexDirection:"column",gap:6,maxHeight:200,overflowY:"auto",marginBottom:10}}>
@@ -597,10 +603,10 @@ export default function DevizeView({ user, gcalEvents }) {
         </div>
       </div>
 
-      {/* ECHIPAMENTE */}
-      <div style={card}>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>03 · Echipamente</div>
+      <div style={cardEchip}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <div style={secT}>🖥️ Echipamente</div>
+          <div style={{...secT,color:"#0057cc"}}>🖥️ Echipamente</div>
           <button onClick={()=>setShowCat(showCat==="echip"?null:"echip")} style={{...btnS,fontSize:12}}>📦 Catalog</button>
         </div>
         {showCat==="echip"&&<div style={{marginBottom:12,background:C.bg,borderRadius:9,padding:10,border:`1.5px solid #c0d4f0`}}>
@@ -615,7 +621,7 @@ export default function DevizeView({ user, gcalEvents }) {
         {/* Col headers */}
         <div style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 50px 80px 22px",gap:4,marginBottom:4}}>
           {["Denumire","Cant.","Preț/U EUR","Zile","Mult","Total EUR",""].map(h=>(
-            <div key={h} style={{fontSize:9,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em",textAlign:h==="Total EUR"||h==="Preț/U EUR"?"right":"left"}}>{h}</div>
+            <div key={h} style={{fontSize:9,color:"#0057cc",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em",textAlign:h==="Total EUR"||h==="Preț/U EUR"?"right":"left"}}>{h}</div>
           ))}
         </div>
         {current.echipamente.map((r,i)=>{
@@ -629,26 +635,26 @@ export default function DevizeView({ user, gcalEvents }) {
               <input style={numI} type="number" step="0.01" min="0" value={r.pret||""} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p2,echipamente:rows};})} placeholder="0"/>
               <input style={numI} type="number" step="0.5" min="0" value={r.zile||1} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],zile:e.target.value}; return {...p2,echipamente:rows};})} placeholder="1"/>
               <div style={{fontSize:11,color:C.sub,textAlign:"center",fontWeight:600}}>{rm}x</div>
-              <div style={{fontSize:13,color:C.blue,fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
+              <div style={{fontSize:13,color:"#0057cc",fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p2=>({...p2,echipamente:p2.echipamente.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:15,padding:0,lineHeight:1}}>✕</button>
             </div>
           );
         })}
         <button onClick={()=>setCurrent(p=>({...p,echipamente:[...p.echipamente,emptyEchip()]}))}
           style={{width:"100%",padding:"7px",borderRadius:8,border:`1.5px dashed ${C.border}`,background:C.bg,color:C.sub,cursor:"pointer",fontSize:12,marginTop:4}}>+ Adaugă rând</button>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:`1.5px solid ${C.border}`}}>
-          <span style={{fontSize:12,color:C.sub}}>Total Echipamente</span>
-          <span style={{fontSize:15,fontWeight:700,color:C.blue}}>{fmtEUR(totE)} EUR</span>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:"1.5px solid #c0d4f0"}}>
+          <span style={{fontSize:12,color:"#0057cc",fontWeight:600}}>Total Echipamente</span>
+          <span style={{fontSize:16,fontWeight:700,color:"#0057cc"}}>{fmtEUR(totE)} EUR</span>
         </div>
       </div>
 
-      {/* MANOPERĂ */}
-      <div style={card}>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>04 · Manoperă</div>
+      <div style={cardManop}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <div style={secT}>👷 Manoperă</div>
+          <div style={{...secT,color:"#7c3aed"}}>👷 Manoperă</div>
           <button onClick={()=>setShowCat(showCat==="manop"?null:"manop")} style={{...btnS,fontSize:12}}>📦 Catalog</button>
         </div>
-        {showCat==="manop"&&<div style={{marginBottom:12,background:C.bg,borderRadius:9,padding:10,border:`1.5px solid #c0d4f0`}}>
+        {showCat==="manop"&&<div style={{marginBottom:12,background:"#faf5ff",borderRadius:9,padding:10,border:"1.5px solid #e9d5ff"}}>
           {(cat.manopera||[]).map(item=>(
             <div key={item.id} onClick={()=>addFromCatalog("manop",item)}
               style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",borderRadius:8,background:C.card,cursor:"pointer",marginBottom:6,border:`1.5px solid ${C.border}`}}>
@@ -659,7 +665,7 @@ export default function DevizeView({ user, gcalEvents }) {
         </div>}
         <div style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 80px 22px",gap:4,marginBottom:4}}>
           {["Specialitate","Pers.","Preț/zi EUR","Zile","Total EUR",""].map(h=>(
-            <div key={h} style={{fontSize:9,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</div>
+            <div key={h} style={{fontSize:9,color:"#7c3aed",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</div>
           ))}
         </div>
         {current.manopera.map((r,i)=>{
@@ -670,26 +676,26 @@ export default function DevizeView({ user, gcalEvents }) {
               <input style={numI} type="number" step="0.5" min="0" value={r.persoane} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],persoane:e.target.value}; return {...p,manopera:rows};})} placeholder="1"/>
               <input style={numI} type="number" step="0.01" min="0" value={r.pret||""} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p,manopera:rows};})} placeholder="0"/>
               <input style={numI} type="number" step="0.5" min="0" value={r.zile||1} onChange={e=>setCurrent(p=>{ const rows=[...p.manopera]; rows[i]={...rows[i],zile:e.target.value}; return {...p,manopera:rows};})} placeholder="1"/>
-              <div style={{fontSize:13,color:C.blue,fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
+              <div style={{fontSize:13,color:"#7c3aed",fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p=>({...p,manopera:p.manopera.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:15,padding:0,lineHeight:1}}>✕</button>
             </div>
           );
         })}
         <button onClick={()=>setCurrent(p=>({...p,manopera:[...p.manopera,emptyManop()]}))}
           style={{width:"100%",padding:"7px",borderRadius:8,border:`1.5px dashed ${C.border}`,background:C.bg,color:C.sub,cursor:"pointer",fontSize:12,marginTop:4}}>+ Adaugă rând</button>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:`1.5px solid ${C.border}`}}>
-          <span style={{fontSize:12,color:C.sub}}>Total Manoperă</span>
-          <span style={{fontSize:15,fontWeight:700,color:C.blue}}>{fmtEUR(totM)} EUR</span>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:"1.5px solid #e9d5ff"}}>
+          <span style={{fontSize:12,color:"#7c3aed",fontWeight:600}}>Total Manoperă</span>
+          <span style={{fontSize:16,fontWeight:700,color:"#7c3aed"}}>{fmtEUR(totM)} EUR</span>
         </div>
       </div>
 
-      {/* TRANSPORT */}
-      <div style={card}>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>05 · Transport</div>
+      <div style={cardTransp}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <div style={secT}>🚚 Transport</div>
+          <div style={{...secT,color:"#b45309"}}>🚚 Transport</div>
           <button onClick={()=>setShowCat(showCat==="transp"?null:"transp")} style={{...btnS,fontSize:12}}>📦 Catalog</button>
         </div>
-        {showCat==="transp"&&<div style={{marginBottom:12,background:C.bg,borderRadius:9,padding:10,border:`1.5px solid #c0d4f0`}}>
+        {showCat==="transp"&&<div style={{marginBottom:12,background:"#fffbeb",borderRadius:9,padding:10,border:"1.5px solid #fde68a"}}>
           {(cat.transport||[]).map(item=>(
             <div key={item.id} onClick={()=>addFromCatalog("transp",item)}
               style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",borderRadius:8,background:C.card,cursor:"pointer",marginBottom:6,border:`1.5px solid ${C.border}`}}>
@@ -700,7 +706,7 @@ export default function DevizeView({ user, gcalEvents }) {
         </div>}
         <div style={{display:"grid",gridTemplateColumns:"2fr 80px 60px 80px 22px",gap:4,marginBottom:4}}>
           {["Vehicul","Preț EUR","Nr.","Total EUR",""].map(h=>(
-            <div key={h} style={{fontSize:9,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</div>
+            <div key={h} style={{fontSize:9,color:"#b45309",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</div>
           ))}
         </div>
         {current.transport.map((r,i)=>{
@@ -710,22 +716,22 @@ export default function DevizeView({ user, gcalEvents }) {
               <input style={inp} value={r.vehicul} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],vehicul:e.target.value}; return {...p,transport:rows};})} placeholder="Tip vehicul"/>
               <input style={numI} type="number" step="0.01" min="0" value={r.pret||""} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p,transport:rows};})} placeholder="0"/>
               <input style={numI} type="number" step="1" min="0" value={r.nr||1} onChange={e=>setCurrent(p=>{ const rows=[...p.transport]; rows[i]={...rows[i],nr:e.target.value}; return {...p,transport:rows};})} placeholder="1"/>
-              <div style={{fontSize:13,color:C.blue,fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
+              <div style={{fontSize:13,color:"#b45309",fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p=>({...p,transport:p.transport.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:15,padding:0,lineHeight:1}}>✕</button>
             </div>
           );
         })}
         <button onClick={()=>setCurrent(p=>({...p,transport:[...p.transport,emptyTransp()]}))}
           style={{width:"100%",padding:"7px",borderRadius:8,border:`1.5px dashed ${C.border}`,background:C.bg,color:C.sub,cursor:"pointer",fontSize:12,marginTop:4}}>+ Adaugă rând</button>
-        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:`1.5px solid ${C.border}`}}>
-          <span style={{fontSize:12,color:C.sub}}>Total Transport</span>
-          <span style={{fontSize:15,fontWeight:700,color:C.blue}}>{fmtEUR(totT)} EUR</span>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:12,paddingTop:12,borderTop:"1.5px solid #fde68a"}}>
+          <span style={{fontSize:12,color:"#b45309",fontWeight:600}}>Total Transport</span>
+          <span style={{fontSize:16,fontWeight:700,color:"#b45309"}}>{fmtEUR(totT)} EUR</span>
         </div>
       </div>
 
-      {/* DISCOUNT + TOTAL */}
-      <div style={card}>
-        <div style={secT}>💰 Discount & Total</div>
+      <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>06 · Discount & Total</div>
+      <div style={cardDiscount}>
+        <div style={{...secT,color:"#1a7a4a"}}>💰 Discount & Total</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
           <div>
             <label style={lbl}>Discount Echipamente %</label>
