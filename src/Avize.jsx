@@ -69,7 +69,7 @@ function printAviz(aviz) {
   <div class="title-section">
     <div class="aviz-title">AVIZ DE ÎNSOȚIRE A MĂRFII</div>
     <div class="info-grid">
-      <span class="lbl">EXPEDITOR:</span><span class="val">IG Vision · 0732 302 813 · office@igvision.ro</span>
+      <span class="lbl">EXPEDITOR:</span><span class="val">IG Vision SRL · 0732 302 813 · office@igvision.ro</span>
       <span class="lbl">DESTINATAR:</span><span class="val">${aviz.beneficiar||"—"}</span>
       <span class="lbl">EVENIMENT:</span><span class="val">${aviz.eveniment||"—"}</span>
       <span class="lbl">LOCAȚIE:</span><span class="val">${aviz.locatie||"—"}</span>

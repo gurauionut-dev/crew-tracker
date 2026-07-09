@@ -520,6 +520,28 @@ export default function App() {
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
+
+  // ── Presence tracking ──────────────────────────────────────────────────────
+  const [onlineUsers, setOnlineUsers] = useState({});
+  useEffect(()=>{
+    if (!user) return;
+    // Mark self as online
+    const presRef = doc(db,"presence",user.id);
+    setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()});
+    // Heartbeat every 30s
+    const hb = setInterval(()=>setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()}),30000);
+    // Mark offline on unload
+    const markOffline = ()=>setDoc(presRef,{uid:user.id,name:user.name,online:false,lastSeen:serverTimestamp()});
+    window.addEventListener("beforeunload", markOffline);
+    window.addEventListener("pagehide", markOffline);
+    // Listen all presence
+    const unsub = onSnapshot(collection(db,"presence"), snap=>{
+      const map={};
+      snap.forEach(d=>{ const data=d.data(); if(data.online) map[d.id]=data; });
+      setOnlineUsers(map);
+    });
+    return ()=>{ clearInterval(hb); markOffline(); window.removeEventListener("beforeunload",markOffline); window.removeEventListener("pagehide",markOffline); unsub(); };
+  },[user?.id]);
   const sidebarIcons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
   const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",avize:"Avize",analytics:"Business",settings:"Setări"};
 
@@ -551,6 +573,26 @@ export default function App() {
             </button>
           ))}
         </nav>
+
+        {/* Online members */}
+        {Object.keys(onlineUsers).filter(id=>id!==user.id).length>0&&(
+          <div style={{padding:"8px 12px",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+            <div style={{fontSize:9,color:"#6b7280",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,fontWeight:600}}>Online acum</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {Object.values(onlineUsers).filter(u=>u.uid!==user.id).map(u=>{
+                const member = TEAM.find(t=>t.id===u.uid);
+                if (!member) return null;
+                return (
+                  <div key={u.uid} style={{position:"relative"}} title={member.name}>
+                    <Avatar member={member} size={28}/>
+                    <div style={{position:"absolute",bottom:0,right:0,width:9,height:9,borderRadius:"50%",background:"#22c55e",border:"2px solid #111827"}}/>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div style={{padding:"10px",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:9,background:"rgba(255,255,255,0.05)"}}>
             <Avatar member={user} size={28}/>
@@ -571,7 +613,10 @@ export default function App() {
           <img src={LOGO_B64} alt="IG Vision" style={{height:26,objectFit:"contain"}}/>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <LiveDot/><span style={{fontSize:10,color:"#16a34a",fontWeight:500}}>Live</span>
-            <Avatar member={user} size={26}/>
+            <div style={{position:"relative"}}>
+              <Avatar member={user} size={26}/>
+              <div style={{position:"absolute",bottom:0,right:0,width:8,height:8,borderRadius:"50%",background:"#22c55e",border:"2px solid #111827"}}/>
+            </div>
             <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} style={{background:"none",border:"1px solid #374151",borderRadius:6,padding:"3px 8px",fontSize:11,color:"#9ca3af",cursor:"pointer"}}>Ieși</button>
           </div>
         </div>
