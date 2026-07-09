@@ -109,7 +109,6 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   .tline{display:flex;justify-content:space-between;padding:4px 10px;border:1px solid #e2eaf5;border-top:none;font-size:11px;}
   .tline:first-child{border-top:1px solid #e2eaf5;}
   .tline.disc{color:#cc3300;}
-  .tline.after{font-weight:600;background:#f5f8ff;}
   .tline.after{background:#e8f0ff;border-color:#c0d4f0;font-weight:700;}
   .tline.after span:last-child{color:#0057cc;font-size:16px;font-weight:800;}
   .tline.grand{background:#f0f0f0;color:#555;font-size:13px;font-weight:600;border-color:#ddd;}
@@ -118,7 +117,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   .footer{margin-top:8mm;border-top:1px solid #e2eaf5;padding:5px 14mm;display:flex;justify-content:space-between;}
   .footer span{font-size:9px;color:#6b7fa3;}
   @media print{
-    .no-print{display:none !important;}
+    .no-print{display:none !important;visibility:hidden !important;opacity:0 !important;}
     @page{size:A4;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
