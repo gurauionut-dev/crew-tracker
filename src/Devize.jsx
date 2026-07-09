@@ -110,14 +110,19 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   .tline:first-child{border-top:1px solid #e2eaf5;}
   .tline.disc{color:#cc3300;}
   .tline.after{font-weight:600;background:#f5f8ff;}
-  .tline.grand{background:#0057cc;color:#fff;font-size:14px;font-weight:700;border-color:#0057cc;padding:7px 10px;}
+  .tline.after{background:#e8f0ff;border-color:#c0d4f0;font-weight:700;}
+  .tline.after span:last-child{color:#0057cc;font-size:16px;font-weight:800;}
+  .tline.grand{background:#f0f0f0;color:#555;font-size:13px;font-weight:600;border-color:#ddd;}
+  .tline.grand span:last-child{font-size:14px;}
+  .anexa{color:#fff;font-size:16px;font-weight:800;letter-spacing:1px;margin-top:3px;}
   .footer{margin-top:8mm;border-top:1px solid #e2eaf5;padding:5px 14mm;display:flex;justify-content:space-between;}
   .footer span{font-size:9px;color:#6b7fa3;}
   @media print{
-    .no-print{display:none;}
+    .no-print{display:none !important;}
     @page{size:A4;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
+  .no-print{position:fixed;bottom:20px;right:20px;display:flex;gap:10px;z-index:9999;}
 </style></head><body>
 <div class="page">
 
@@ -125,7 +130,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   <img src="${LOGO_B64}" alt="IG Vision"/>
   <div class="header-right">
     <div class="type">${isAviz?"AVIZ DE ÎNSOȚIRE":"OFERTĂ DE PREȚ"}</div>
-    <div class="date">${nrContractStr}${nrContractStr&&nrAnexaStr?" · ":""}${nrAnexaStr}</div>
+    ${nrAnexaStr?`<div class="anexa">${nrAnexaStr}</div>`:""}
     <div class="date">${new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})}</div>
   </div>
 </div>
@@ -222,12 +227,30 @@ ${!isAviz?`
 </div>
 </body></html>`;
 
-  const blob = new Blob([html], {type:"text/html;charset=utf-8"});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href=url; a.target="_blank"; a.rel="noopener";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  // Safari-compatible: use data URI instead of blob URL
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) {
+    // Safari: open in same tab via data URI
+    const encoded = encodeURIComponent(html);
+    const win = window.open();
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      // Fallback: download as .html file
+      const a = document.createElement("a");
+      a.href = "data:text/html;charset=utf-8," + encoded;
+      a.download = "deviz.html";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  } else {
+    const blob = new Blob([html], {type:"text/html;charset=utf-8"});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href=url; a.target="_blank"; a.rel="noopener";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  }
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
