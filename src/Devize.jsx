@@ -76,8 +76,6 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
 
   const nrAnexaStr = deviz.nrAnexa ? `Anexă #${deviz.nrAnexa}` : "";
   const nrContractStr = deviz.client?.nrContract ? `Contract #${deviz.client.nrContract}` : "";
-  const firmaStr = deviz.firmaFacturare==="2" && deviz.client?.firma2 ? deviz.client.firma2 : (deviz.client?.firma1||"");
-
   const html = `<!DOCTYPE html>
 <html lang="ro"><head>
 <meta charset="UTF-8"/>
@@ -136,7 +134,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
 
 <div class="info">
   <div class="info-grid">
-    <span class="lbl">BENEFICIAR:</span><span class="val">${deviz.client?.nume||deviz.beneficiar||"—"}${firmaStr?" · "+firmaStr:""}</span>
+    <span class="lbl">BENEFICIAR:</span><span class="val">${deviz.client?.nume||deviz.beneficiar||"—"}</span>
     <span class="lbl">EVENIMENT:</span><span class="val">${deviz.eveniment||"—"}</span>
     <span class="lbl">LOCAȚIE:</span><span class="val">${deviz.locatie||"—"}</span>
     <span class="lbl">PRODUCTION MANAGER:</span><span class="val">IONUȚ GURĂU &nbsp; 0732 302 813</span>
@@ -308,9 +306,12 @@ export default function DevizeView({ user, gcalEvents }) {
 
   function newDeviz(client=null) {
     // Auto-calculate next annexe number for this client
-    const nextNr = client
-      ? (Math.max(0,...devize.filter(d=>d.client?.id===client.id).map(d=>parseInt(d.nrAnexa)||0))+1)
-      : 1;
+    const existingForClient = client
+      ? devize.filter(d=>d.client?.id===client.id).map(d=>parseInt(d.nrAnexa)||0)
+      : [];
+    const nextNr = existingForClient.length > 0
+      ? Math.max(...existingForClient)+1
+      : (client ? 1 : "");  // empty if no client yet — will be set when client selected
     setCurrent({id:uid(),beneficiar:client?.nume||"",eveniment:"",locatie:"",dateStart:"",dateEnd:"",
       client:client||null,nrAnexa:String(nextNr),
       discountEchip:client?.discountEchip||0,discountManop:client?.discountManop||0,
@@ -332,7 +333,19 @@ export default function DevizeView({ user, gcalEvents }) {
   async function saveClient(c) { await setDoc(doc(db,"clienti",c.id||uid()),{...c,updatedAt:serverTimestamp()}); setClientEdit(null); }
   async function deleteClient(id) { await deleteDoc(doc(db,"clienti",id)); }
 
-  function selectClient(c) { setCurrent(p=>({...p,client:c,beneficiar:c.nume,discountEchip:c.discountEchip||0,discountManop:c.discountManop||0})); }
+  function selectClient(c) {
+    // Calculate next annexe number for this client
+    const existingNrs = devize.filter(d=>d.client?.id===c.id).map(d=>parseInt(d.nrAnexa)||0);
+    const nextNr = existingNrs.length > 0 ? Math.max(...existingNrs)+1 : 1;
+    setCurrent(p=>({
+      ...p,
+      client:c,
+      beneficiar:c.nume,
+      discountEchip:c.discountEchip||0,
+      discountManop:c.discountManop||0,
+      nrAnexa: p.nrAnexa && p.nrAnexa !== "1" ? p.nrAnexa : String(nextNr),
+    }));
+  }
   function selectCalEvent(ev) { setCurrent(p=>({...p,eveniment:ev.title,locatie:ev.location||"",dateStart:ev.dayKey,dateEnd:ev.dayKey,calEventId:ev.originalId||ev.id})); }
   function addFromCatalog(type,item) {
     if(type==="echip") setCurrent(p=>({...p,echipamente:[...p.echipamente,{id:uid(),denumire:item.denumire,unitate:item.unitate,pret:item.pret,cantitate:"1",zile:"1"}]}));
@@ -479,10 +492,7 @@ export default function DevizeView({ user, gcalEvents }) {
               <div key={key} style={{marginBottom:10}}><label style={lbl}>{lb}</label>
                 <input type={type} style={inp} value={clientEdit[key]||""} onChange={e=>setClientEdit(p=>({...p,[key]:e.target.value}))}/></div>
             ))}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
-              <div><label style={lbl}>Firmă principală</label><input style={inp} value={clientEdit.firma1||""} onChange={e=>setClientEdit(p=>({...p,firma1:e.target.value}))} placeholder="Denumire firmă"/></div>
-              <div><label style={lbl}>Firmă secundară</label><input style={inp} value={clientEdit.firma2||""} onChange={e=>setClientEdit(p=>({...p,firma2:e.target.value}))} placeholder="A doua firmă (opțional)"/></div>
-            </div>
+
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
               <div><label style={lbl}>Discount Echip %</label><input type="number" style={inp} value={clientEdit.discountEchip||""} onChange={e=>setClientEdit(p=>({...p,discountEchip:parseFloat(e.target.value)||0}))}/></div>
               <div><label style={lbl}>Discount Manop %</label><input type="number" style={inp} value={clientEdit.discountManop||""} onChange={e=>setClientEdit(p=>({...p,discountManop:parseFloat(e.target.value)||0}))}/></div>
@@ -635,15 +645,13 @@ export default function DevizeView({ user, gcalEvents }) {
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
           <div><label style={lbl}>Beneficiar</label><input style={inp} value={current.beneficiar||""} onChange={e=>setCurrent(p=>({...p,beneficiar:e.target.value}))} placeholder="Numele clientului"/></div>
           <div><label style={lbl}>Eveniment</label><input style={inp} value={current.eveniment||""} onChange={e=>setCurrent(p=>({...p,eveniment:e.target.value}))} placeholder="Tip eveniment"/></div>
-          <div><label style={lbl}>Nr. Anexă {current.client?.nrContract?`(Contract #${current.client.nrContract})`:""}</label>
-            <input style={inp} value={current.nrAnexa||""} onChange={e=>setCurrent(p=>({...p,nrAnexa:e.target.value}))} placeholder="Auto"/>
+          <div>
+            <label style={lbl}>Nr. Anexă {current.client?.nrContract?`(Contract #${current.client.nrContract})`:""}</label>
+            <input style={inp} value={current.nrAnexa||""} onChange={e=>setCurrent(p=>({...p,nrAnexa:e.target.value}))}
+              placeholder={current.client?"Auto (selectează clientul)":"Selectează clientul mai întâi"}/>
+            {current.nrAnexa&&<div style={{fontSize:10,color:C.blue,marginTop:3}}>→ Se va salva ca Anexă #{current.nrAnexa}</div>}
           </div>
-          <div><label style={lbl}>Firmă facturare</label>
-            <select style={{...inp,cursor:"pointer"}} value={current.firmaFacturare||"1"} onChange={e=>setCurrent(p=>({...p,firmaFacturare:e.target.value}))}>
-              <option value="1">{current.client?.firma1||"Firmă principală"}</option>
-              {current.client?.firma2&&<option value="2">{current.client.firma2}</option>}
-            </select>
-          </div>
+
           <div style={{gridColumn:"1/-1"}}><label style={lbl}>Locație</label><input style={inp} value={current.locatie||""} onChange={e=>setCurrent(p=>({...p,locatie:e.target.value}))} placeholder="Locația evenimentului"/></div>
           <div><label style={lbl}>Data început</label><input type="date" style={inp} value={current.dateStart||""} onChange={e=>setCurrent(p=>({...p,dateStart:e.target.value,nrZileManual:null}))}/></div>
           <div><label style={lbl}>Data sfârșit</label><input type="date" style={inp} value={current.dateEnd||""} onChange={e=>setCurrent(p=>({...p,dateEnd:e.target.value,nrZileManual:null}))}/></div>

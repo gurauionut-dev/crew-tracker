@@ -520,36 +520,95 @@ export default function App() {
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
+  const sidebarIcons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
+  const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",avize:"Avize",analytics:"Business",settings:"Setări"};
 
   return (
-    <div style={{minHeight:"100dvh",background:"#111",display:"flex",flexDirection:"column"}}>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+    <div style={{minHeight:"100dvh",display:"flex",background:"#f0f4fa"}}>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes slideIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:9px;cursor:pointer;transition:all 0.15s;color:#9ca3af;font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left;}
+        .nav-item:hover{background:rgba(255,255,255,0.07);color:#e5e7eb;}
+        .nav-item.active{background:rgba(96,165,250,0.15);color:#fff;}
+        .nav-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+        .content-area{animation:slideIn 0.18s ease}
+        @media(max-width:768px){.sidebar-wrap{display:none!important}.mobile-bar{display:flex!important}.bottom-nav-bar{display:flex!important}}
+        @media(min-width:769px){.mobile-bar{display:none!important}.bottom-nav-bar{display:none!important}.sidebar-wrap{display:flex!important}}
+      `}</style>
 
-      {/* Header */}
-      <div style={{background:"#1a1a1a",borderBottom:"1px solid #222",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:"calc(10px + env(safe-area-inset-top))",position:"sticky",top:0,zIndex:100}}>
-        <img src={LOGO_B64} alt="IG Vision" style={{height:28,objectFit:"contain",filter:"brightness(1.1)"}}/>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:11,color:"#4ade80",fontWeight:500,display:"flex",alignItems:"center"}}><LiveDot/>Live</span>
-          <Avatar member={user} size={28}/>
-          <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} style={{background:"none",border:"1px solid #2a2a2a",borderRadius:6,padding:"4px 10px",fontSize:11,color:"#555",cursor:"pointer"}}>Ieși</button>
+      {/* ── SIDEBAR desktop ── */}
+      <div className="sidebar-wrap" style={{width:220,flexShrink:0,background:"#111827",flexDirection:"column",height:"100dvh",position:"sticky",top:0,paddingTop:"env(safe-area-inset-top)"}}>
+        <div style={{padding:"20px 16px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <img src={LOGO_B64} alt="IG Vision" style={{height:30,objectFit:"contain",filter:"brightness(1.1)"}}/>
+        </div>
+        <nav style={{flex:1,padding:"10px 10px",overflowY:"auto"}}>
+          {tabs.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)} className={`nav-item${tab===t.id?" active":""}`}>
+              <span className="nav-icon">{sidebarIcons[t.id]}</span>
+              <span style={{flex:1}}>{sidebarLabels[t.id]||t.label}</span>
+              {t.id==="approve"&&pending>0&&<span style={{background:"#ef4444",color:"#fff",fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:20}}>{pending}</span>}
+            </button>
+          ))}
+        </nav>
+        <div style={{padding:"10px",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",borderRadius:9,background:"rgba(255,255,255,0.05)"}}>
+            <Avatar member={user} size={28}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:600,color:"#f9fafb",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.name.split(" ")[0]}</div>
+              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:1}}><LiveDot/><span style={{fontSize:10,color:"#4ade80",fontWeight:500}}>Live</span></div>
+            </div>
+            <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} title="Ieși"
+              style={{background:"none",border:"none",cursor:"pointer",color:"#6b7280",fontSize:18,padding:0,lineHeight:1}}>↩</button>
+          </div>
         </div>
       </div>
 
-      <div style={{flex:1,overflowY:"auto",paddingBottom:"calc(72px + env(safe-area-inset-bottom))"}}>
-        {tab==="today"   &&!user.isViewer&&<TodayView   {...shared} selEvent={selEvent} setSelEvent={setSelEvent} toggleMyAction={toggleMyAction}/>}
-        {tab==="approve" && user.isChief &&<ApproveView gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} setApprovalStatus={setApprovalStatus} submitApproval={submitApproval} getAmount={getAmount} calcBonus={calcBonus} calLoading={calLoading}/>}
-        {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
-        {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
-        {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
-        {tab==="avize"&&<AvizeView user={user} gcalEvents={gcalEvents}/>}
-        {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
+      {/* ── MAIN ── */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+        {/* Mobile header */}
+        <div className="mobile-bar" style={{background:"#111827",padding:"10px 16px",alignItems:"center",justifyContent:"space-between",paddingTop:"calc(10px + env(safe-area-inset-top))",position:"sticky",top:0,zIndex:50,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <img src={LOGO_B64} alt="IG Vision" style={{height:26,objectFit:"contain"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <LiveDot/><span style={{fontSize:10,color:"#4ade80",fontWeight:500}}>Live</span>
+            <Avatar member={user} size={26}/>
+            <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} style={{background:"none",border:"1px solid #374151",borderRadius:6,padding:"3px 8px",fontSize:11,color:"#9ca3af",cursor:"pointer"}}>Ieși</button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div key={tab} className="content-area" style={{flex:1,overflowY:"auto",paddingBottom:"calc(72px + env(safe-area-inset-bottom))"}}>
+          {tab==="today"   &&!user.isViewer&&<TodayView   {...shared} selEvent={selEvent} setSelEvent={setSelEvent} toggleMyAction={toggleMyAction}/>}
+          {tab==="approve" && user.isChief &&<ApproveView gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} setApprovalStatus={setApprovalStatus} submitApproval={submitApproval} getAmount={getAmount} calcBonus={calcBonus} calLoading={calLoading}/>}
+          {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
+          {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
+          {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
+          {tab==="avize"&&<AvizeView user={user} gcalEvents={gcalEvents}/>}
+          {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
+        </div>
+
+        {/* Mobile bottom nav */}
+        <div className="bottom-nav-bar" style={{position:"fixed",bottom:0,left:0,right:0,background:"#111827",borderTop:"1px solid rgba(255,255,255,0.08)",zIndex:50,paddingBottom:"env(safe-area-inset-bottom)"}}>
+          {tabs.map(t=>{
+            const active=tab===t.id;
+            return (
+              <button key={t.id} onClick={()=>setTab(t.id)}
+                style={{flex:1,padding:"10px 2px 8px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative"}}>
+                <span style={{fontSize:18}}>{sidebarIcons[t.id]}</span>
+                <span style={{fontSize:9,fontWeight:active?600:400,color:active?"#60a5fa":"#6b7280"}}>{sidebarLabels[t.id]||t.label}</span>
+                {active&&<div style={{position:"absolute",bottom:0,left:"20%",right:"20%",height:2,background:"#60a5fa",borderRadius:2}}/>}
+                {t.id==="approve"&&pending>0&&<span style={{position:"absolute",top:5,right:"15%",width:14,height:14,borderRadius:"50%",background:"#ef4444",color:"#fff",fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pending}</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <BottomNav tabs={tabs} tab={tab} setTab={setTab} pendingCount={pending}/>
       <Toast msg={toast}/>
     </div>
   );
 }
+
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 
@@ -573,51 +632,60 @@ function LoginScreen({ onLogin }) {
   const cur=step==="password"?TEAM.find(m=>m.email.toLowerCase()===email.trim().toLowerCase()):null;
 
   return (
-    <div style={{minHeight:"100dvh",background:"#111",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 20px calc(20px + env(safe-area-inset-bottom))"}}>
-      <div style={{width:"100%",maxWidth:340}}>
-        <div style={{textAlign:"center",marginBottom:36}}>
-          <img src={LOGO_B64} alt="IG Vision" style={{height:52,objectFit:"contain",marginBottom:8}}/>
-          <div style={{fontSize:10,color:"#555",letterSpacing:4,textTransform:"uppercase"}}>crew tracker</div>
+    <div style={{minHeight:"100dvh",background:"#111827",display:"flex"}}>
+      {/* Left decorative panel - desktop only */}
+      <div style={{width:"45%",background:"linear-gradient(135deg,#1e3a5f 0%,#111827 100%)",display:"none",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:40}} className="login-left">
+        <img src={LOGO_B64} alt="IG Vision" style={{height:48,objectFit:"contain",filter:"brightness(1.2)",marginBottom:24}}/>
+        <div style={{fontSize:13,color:"#60a5fa",letterSpacing:4,textTransform:"uppercase",marginBottom:8}}>Crew Tracker</div>
+        <div style={{fontSize:13,color:"#6b7280",textAlign:"center",maxWidth:260,lineHeight:1.6}}>Gestionează echipa, evenimentele și ofertele în timp real.</div>
+      </div>
+      {/* Right login form */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 20px calc(20px + env(safe-area-inset-bottom))"}}>
+      <div style={{width:"100%",maxWidth:360}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <img src={LOGO_B64} alt="IG Vision" style={{height:44,objectFit:"contain",marginBottom:10}}/>
+          <div style={{fontSize:10,color:"#4b5563",letterSpacing:4,textTransform:"uppercase"}}>crew tracker</div>
         </div>
-        <div style={{background:"#1a1a1a",borderRadius:18,padding:24,border:"1px solid #2a2a2a"}}>
+        <div style={{background:"#1f2937",borderRadius:16,padding:28,border:"1px solid rgba(255,255,255,0.08)",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
           {step==="email"&&(
             <>
-              <label style={{fontSize:11,fontWeight:600,color:"#555",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.08em"}}>Email</label>
+              <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.08em"}}>Email</label>
               <input type="email" value={email} onChange={e=>{setEmail(e.target.value);setError("");}}
                 onKeyDown={e=>e.key==="Enter"&&next()} placeholder="adresa@gmail.com" autoFocus
-                style={{width:"100%",padding:"14px",borderRadius:12,border:error?"1px solid #ef4444":"1px solid #2a2a2a",fontSize:16,color:"#e8e8e6",outline:"none",background:"#111",marginBottom:error?8:16,boxSizing:"border-box"}}/>
+                style={{width:"100%",padding:"13px 14px",borderRadius:10,border:error?"1px solid #ef4444":"1px solid rgba(255,255,255,0.1)",fontSize:15,color:"#f9fafb",outline:"none",background:"rgba(255,255,255,0.05)",marginBottom:error?8:16,boxSizing:"border-box"}}/>
               {error&&<div style={{fontSize:12,color:"#ef4444",marginBottom:12}}>⚠ {error}</div>}
-              <button onClick={next} style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"#e8e8e6",color:"#111",fontSize:15,fontWeight:700,cursor:"pointer"}}>Continuă →</button>
+              <button onClick={next} style={{width:"100%",padding:"13px",borderRadius:10,border:"none",background:"#3b82f6",color:"#fff",fontSize:15,fontWeight:600,cursor:"pointer"}}>Continuă →</button>
             </>
           )}
           {step==="password"&&cur&&(
             <>
-              <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"#111",borderRadius:10,marginBottom:20,border:"1px solid #222"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:"rgba(255,255,255,0.05)",borderRadius:10,marginBottom:20,border:"1px solid rgba(255,255,255,0.08)"}}>
                 <Avatar member={cur} size={36}/>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6"}}>{cur.name}</div>
+                  <div style={{fontSize:14,fontWeight:600,color:"#f9fafb"}}>{cur.name}</div>
                   <div style={{fontSize:11,color:"#555"}}>{cur.email}</div>
                 </div>
                 <button onClick={()=>{setStep("email");setPassword("");setError("");}} style={{fontSize:11,color:"#666",background:"none",border:"none",cursor:"pointer"}}>Schimbă</button>
               </div>
-              <label style={{fontSize:11,fontWeight:600,color:"#555",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.08em"}}>Parolă</label>
+              <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.08em"}}>Parolă</label>
               <div style={{position:"relative",marginBottom:error?8:20}}>
                 <input type={showPwd?"text":"password"} value={password} onChange={e=>{setPassword(e.target.value);setError("");}}
                   onKeyDown={e=>e.key==="Enter"&&login()} placeholder="••••••••" autoFocus
-                  style={{width:"100%",padding:"14px 48px 14px 14px",borderRadius:12,border:error?"1px solid #ef4444":"1px solid #2a2a2a",fontSize:16,color:"#e8e8e6",outline:"none",background:"#111",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"13px 48px 13px 14px",borderRadius:10,border:error?"1px solid #ef4444":"1px solid rgba(255,255,255,0.1)",fontSize:15,color:"#f9fafb",outline:"none",background:"rgba(255,255,255,0.05)",boxSizing:"border-box"}}/>
                 <button onClick={()=>setShowPwd(!showPwd)} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#555",padding:0,lineHeight:1}}>
                   {showPwd?"🙈":"👁"}
                 </button>
               </div>
               {error&&<div style={{fontSize:12,color:"#ef4444",marginBottom:12}}>⚠ {error}</div>}
               <button onClick={login} disabled={loading}
-                style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:loading?"#333":"#e8e8e6",color:loading?"#666":"#111",fontSize:15,fontWeight:700,cursor:loading?"default":"pointer"}}>
+                style={{width:"100%",padding:"13px",borderRadius:10,border:"none",background:loading?"#1e3a5f":"#3b82f6",color:"#fff",fontSize:15,fontWeight:600,cursor:loading?"default":"pointer"}}>
                 {loading?"Se verifică...":"Intră →"}
               </button>
             </>
           )}
         </div>
-        <div style={{textAlign:"center",marginTop:20,fontSize:11,color:"#333"}}>www.igvision.ro</div>
+        <div style={{textAlign:"center",marginTop:16,fontSize:11,color:"#4b5563"}}>www.igvision.ro</div>
+      </div>
       </div>
     </div>
   );
