@@ -47,7 +47,6 @@ export function listenApprovals(callback) {
   });
 }
 
-// Event colors — shared across all users
 export async function saveEventColor(originalId, color) {
   const ref = doc(db, "eventColors", originalId);
   await setDoc(ref, { color, updatedAt: serverTimestamp() });
