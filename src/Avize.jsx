@@ -50,7 +50,7 @@ function printAviz(aviz) {
   .footer span{font-size:9px;color:#6b7fa3;}
   .watermark{position:fixed;bottom:40mm;right:14mm;font-size:60px;color:rgba(0,87,204,0.06);font-weight:900;transform:rotate(-20deg);pointer-events:none;z-index:0;}
   @media print{
-    .no-print{display:none;}
+    .no-print{display:none !important;}
     @page{size:A4;margin:0;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
@@ -132,12 +132,24 @@ function printAviz(aviz) {
 </div>
 </body></html>`;
 
-  const blob = new Blob([html],{type:"text/html;charset=utf-8"});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href=url; a.target="_blank"; a.rel="noopener";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),10000);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  if (isSafari) {
+    const win = window.open();
+    if (win) { win.document.write(html); win.document.close(); }
+    else {
+      const a = document.createElement("a");
+      a.href = "data:text/html;charset=utf-8," + encodeURIComponent(html);
+      a.download = "aviz.html";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+  } else {
+    const blob = new Blob([html],{type:"text/html;charset=utf-8"});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href=url; a.target="_blank"; a.rel="noopener";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+  }
 }
 
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
