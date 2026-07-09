@@ -509,6 +509,24 @@ export default function App() {
       t+events.filter(ev=>Object.values(getChecked(m.id,ev.id)).some(Boolean)&&!getApproval(m.id,ev.id)).length,0);
   }
 
+  // ── Presence tracking — must be before any conditional return ────────────
+  const [onlineUsers, setOnlineUsers] = useState({});
+  useEffect(()=>{
+    if (!user) return;
+    const presRef = doc(db,"presence",user.id);
+    setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()});
+    const hb = setInterval(()=>setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()}),30000);
+    const markOffline = ()=>setDoc(presRef,{uid:user.id,name:user.name,online:false,lastSeen:serverTimestamp()});
+    window.addEventListener("beforeunload", markOffline);
+    window.addEventListener("pagehide", markOffline);
+    const unsub = onSnapshot(collection(db,"presence"), snap=>{
+      const map={};
+      snap.forEach(d=>{ const data=d.data(); if(data.online) map[d.id]=data; });
+      setOnlineUsers(map);
+    });
+    return ()=>{ clearInterval(hb); markOffline(); window.removeEventListener("beforeunload",markOffline); window.removeEventListener("pagehide",markOffline); unsub(); };
+  },[user?.id]);
+
   if (!user) return <><LoginScreen onLogin={m=>{setUser(m);showToast(`Bun venit, ${m.name.split(" ")[0]}! 👋`);}}/><Toast msg={toast}/></>;
 
   let tabs=[];
@@ -521,28 +539,6 @@ export default function App() {
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
-
-  // ── Presence tracking ──────────────────────────────────────────────────────
-  const [onlineUsers, setOnlineUsers] = useState({});
-  useEffect(()=>{
-    if (!user) return;
-    // Mark self as online
-    const presRef = doc(db,"presence",user.id);
-    setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()});
-    // Heartbeat every 30s
-    const hb = setInterval(()=>setDoc(presRef,{uid:user.id,name:user.name,online:true,lastSeen:serverTimestamp()}),30000);
-    // Mark offline on unload
-    const markOffline = ()=>setDoc(presRef,{uid:user.id,name:user.name,online:false,lastSeen:serverTimestamp()});
-    window.addEventListener("beforeunload", markOffline);
-    window.addEventListener("pagehide", markOffline);
-    // Listen all presence
-    const unsub = onSnapshot(collection(db,"presence"), snap=>{
-      const map={};
-      snap.forEach(d=>{ const data=d.data(); if(data.online) map[d.id]=data; });
-      setOnlineUsers(map);
-    });
-    return ()=>{ clearInterval(hb); markOffline(); window.removeEventListener("beforeunload",markOffline); window.removeEventListener("pagehide",markOffline); unsub(); };
-  },[user?.id]);
   const sidebarIcons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
   const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",avize:"Avize",analytics:"Business",settings:"Setări"};
 
