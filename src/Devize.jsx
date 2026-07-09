@@ -74,6 +74,10 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
       +(deviz.dateEnd&&deviz.dateEnd!==deviz.dateStart?" — "+new Date(deviz.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"}):"")
     : "";
 
+  const nrAnexaStr = deviz.nrAnexa ? `Anexă #${deviz.nrAnexa}` : "";
+  const nrContractStr = deviz.client?.nrContract ? `Contract #${deviz.client.nrContract}` : "";
+  const firmaStr = deviz.firmaFacturare==="2" && deviz.client?.firma2 ? deviz.client.firma2 : (deviz.client?.firma1||"");
+
   const html = `<!DOCTYPE html>
 <html lang="ro"><head>
 <meta charset="UTF-8"/>
@@ -120,14 +124,15 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
 <div class="header">
   <img src="${LOGO_B64}" alt="IG Vision"/>
   <div class="header-right">
-    <div class="type">${isAviz?"AVIZ DE ÎNSOȚIRE":"RENT"}</div>
+    <div class="type">${isAviz?"AVIZ DE ÎNSOȚIRE":"OFERTĂ DE PREȚ"}</div>
+    <div class="date">${nrContractStr}${nrContractStr&&nrAnexaStr?" · ":""}${nrAnexaStr}</div>
     <div class="date">${new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})}</div>
   </div>
 </div>
 
 <div class="info">
   <div class="info-grid">
-    <span class="lbl">BENEFICIAR:</span><span class="val">${deviz.client?.nume||deviz.beneficiar||"—"}</span>
+    <span class="lbl">BENEFICIAR:</span><span class="val">${deviz.client?.nume||deviz.beneficiar||"—"}${firmaStr?" · "+firmaStr:""}</span>
     <span class="lbl">EVENIMENT:</span><span class="val">${deviz.eveniment||"—"}</span>
     <span class="lbl">LOCAȚIE:</span><span class="val">${deviz.locatie||"—"}</span>
     <span class="lbl">PRODUCTION MANAGER:</span><span class="val">IONUȚ GURĂU &nbsp; 0732 302 813</span>
@@ -177,7 +182,7 @@ ${manopRows.length>0?`
   </tbody></table>
 </div>`:""}
 
-${transpRows.length>0?`
+${!isAviz&&transpRows.length>0?`
 <div class="section">
   <div class="sec-title">Transport</div>
   <table><thead><tr>
@@ -279,9 +284,15 @@ export default function DevizeView({ user, gcalEvents }) {
   const tva       = afterDisc*0.21;
   const totalGen  = afterDisc+tva;
 
-  function newDeviz() {
-    setCurrent({id:uid(),beneficiar:"",eveniment:"",locatie:"",dateStart:"",dateEnd:"",
-      client:null,status:"draft",discountEchip:0,discountManop:0,
+  function newDeviz(client=null) {
+    // Auto-calculate next annexe number for this client
+    const nextNr = client
+      ? (Math.max(0,...devize.filter(d=>d.client?.id===client.id).map(d=>parseInt(d.nrAnexa)||0))+1)
+      : 1;
+    setCurrent({id:uid(),beneficiar:client?.nume||"",eveniment:"",locatie:"",dateStart:"",dateEnd:"",
+      client:client||null,nrAnexa:String(nextNr),
+      discountEchip:client?.discountEchip||0,discountManop:client?.discountManop||0,
+      status:"draft",
       echipamente:[emptyEchip()],manopera:[emptyManop()],transport:[emptyTransp()]});
     setView("edit");
   }
@@ -429,10 +440,11 @@ export default function DevizeView({ user, gcalEvents }) {
             </div>
             {c.email&&<div style={{fontSize:12,color:C.sub,marginBottom:2}}>✉️ {c.email}</div>}
             {c.telefon&&<div style={{fontSize:12,color:C.sub,marginBottom:6}}>📞 {c.telefon}</div>}
-            <div style={{display:"flex",gap:6}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {c.nrContract&&<span style={{fontSize:11,background:C.blueL,color:C.blue,padding:"2px 8px",borderRadius:20,fontWeight:600}}>Contract #{c.nrContract}</span>}
               {c.discountEchip>0&&<span style={{fontSize:11,background:C.greenL,color:C.green,padding:"2px 8px",borderRadius:20,fontWeight:600}}>Echip -{c.discountEchip}%</span>}
               {c.discountManop>0&&<span style={{fontSize:11,background:C.greenL,color:C.green,padding:"2px 8px",borderRadius:20,fontWeight:600}}>Manop -{c.discountManop}%</span>}
-              {!c.discountEchip&&!c.discountManop&&<span style={{fontSize:11,color:C.sub}}>Fără discount predefinit</span>}
+              {!c.discountEchip&&!c.discountManop&&!c.nrContract&&<span style={{fontSize:11,color:C.sub}}>Fără discount predefinit</span>}
             </div>
           </div>
         ))}
@@ -441,10 +453,14 @@ export default function DevizeView({ user, gcalEvents }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,30,80,0.35)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
           <div style={{background:C.card,borderRadius:14,padding:24,width:"100%",maxWidth:380,border:`1.5px solid ${C.border}`,boxShadow:"0 8px 40px rgba(0,80,200,0.12)"}}>
             <div style={{fontSize:15,fontWeight:700,color:C.text,marginBottom:16}}>{clientEdit.nume?"Editează client":"Client nou"}</div>
-            {[["Nume *","nume","text"],["Email","email","email"],["Telefon","telefon","tel"]].map(([lb,key,type])=>(
+            {[["Nume *","nume","text"],["Email","email","email"],["Telefon","telefon","tel"],["Nr. Contract","nrContract","text"]].map(([lb,key,type])=>(
               <div key={key} style={{marginBottom:10}}><label style={lbl}>{lb}</label>
                 <input type={type} style={inp} value={clientEdit[key]||""} onChange={e=>setClientEdit(p=>({...p,[key]:e.target.value}))}/></div>
             ))}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+              <div><label style={lbl}>Firmă principală</label><input style={inp} value={clientEdit.firma1||""} onChange={e=>setClientEdit(p=>({...p,firma1:e.target.value}))} placeholder="Denumire firmă"/></div>
+              <div><label style={lbl}>Firmă secundară</label><input style={inp} value={clientEdit.firma2||""} onChange={e=>setClientEdit(p=>({...p,firma2:e.target.value}))} placeholder="A doua firmă (opțional)"/></div>
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
               <div><label style={lbl}>Discount Echip %</label><input type="number" style={inp} value={clientEdit.discountEchip||""} onChange={e=>setClientEdit(p=>({...p,discountEchip:parseFloat(e.target.value)||0}))}/></div>
               <div><label style={lbl}>Discount Manop %</label><input type="number" style={inp} value={clientEdit.discountManop||""} onChange={e=>setClientEdit(p=>({...p,discountManop:parseFloat(e.target.value)||0}))}/></div>
@@ -484,7 +500,11 @@ export default function DevizeView({ user, gcalEvents }) {
             <div key={d.id} style={card}>
               <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:8}}>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:15,fontWeight:600,color:C.text}}>{d.client?.nume||d.beneficiar||"Fără beneficiar"}</div>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                    <span style={{fontSize:15,fontWeight:600,color:C.text}}>{d.client?.nume||d.beneficiar||"Fără beneficiar"}</span>
+                    {d.nrAnexa&&<span style={{fontSize:10,background:C.blueL,color:C.blue,padding:"2px 7px",borderRadius:20,fontWeight:700}}>Anexă #{d.nrAnexa}</span>}
+                    {d.client?.nrContract&&<span style={{fontSize:10,background:"#f0f4fa",color:C.sub,padding:"2px 7px",borderRadius:20,fontWeight:600}}>Contract #{d.client.nrContract}</span>}
+                  </div>
                   <div style={{fontSize:12,color:C.sub,marginTop:2}}>{d.eveniment||""}{d.locatie?" · "+d.locatie:""}</div>
                   {d.dateStart&&<div style={{fontSize:11,color:C.sub,marginTop:2}}>📅 {new Date(d.dateStart+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short",year:"numeric"})}{d.dateEnd&&d.dateEnd!==d.dateStart?" → "+new Date(d.dateEnd+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"}):""}</div>}
                 </div>
@@ -493,8 +513,8 @@ export default function DevizeView({ user, gcalEvents }) {
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div style={{fontSize:20,fontWeight:700,color:C.blue}}>{fmtEUR(tot)} EUR</div>
                 <div style={{display:"flex",gap:6}}>
-                  <button onClick={()=>printDoc(d,"aviz")} style={{...btnS,fontSize:12,padding:"6px 10px"}}>📋 Aviz</button>
-                  <button onClick={()=>printDoc(d,"deviz")} style={{...btnS,fontSize:12,padding:"6px 10px"}}>📄 PDF</button>
+                  <button onClick={()=>printDoc({...d},"aviz")} style={{...btnS,fontSize:12,padding:"6px 10px"}}>📋 Aviz</button>
+                  <button onClick={()=>printDoc({...d},"deviz")} style={{...btnS,fontSize:12,padding:"6px 10px"}}>📄 PDF</button>
                   <button onClick={()=>{setCurrent({...d});setView("edit");}} style={{...btnS,fontSize:12,padding:"6px 12px",color:C.blue,borderColor:C.blue}}>✏️ Edit</button>
                   <button onClick={()=>setConfirmDel(d.id)} style={{...btnS,fontSize:12,padding:"6px 10px",color:C.red,borderColor:C.red}}>🗑</button>
                 </div>
@@ -527,7 +547,14 @@ export default function DevizeView({ user, gcalEvents }) {
       {/* TOP ACTION BAR */}
       <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",paddingBottom:16,borderBottom:`1.5px solid ${C.border}`,marginBottom:16}}>
         <button onClick={()=>setView("list")} style={btnS}>‹ Înapoi</button>
-        <div style={{flex:1,fontSize:15,fontWeight:700,color:C.blue,minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{current.client?.nume||current.beneficiar||"Deviz nou"}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:15,fontWeight:700,color:C.blue,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{current.client?.nume||current.beneficiar||"Deviz nou"}</div>
+          {(current.client?.nrContract||current.nrAnexa)&&<div style={{fontSize:11,color:C.sub}}>
+            {current.client?.nrContract?`Contract #${current.client.nrContract}`:""}
+            {current.client?.nrContract&&current.nrAnexa?" · ":""}
+            {current.nrAnexa?`Anexă #${current.nrAnexa}`:""}
+          </div>}
+        </div>
         <select value={current.status||"draft"} onChange={e=>setCurrent(p=>({...p,status:e.target.value}))} style={{...btnS,cursor:"pointer"}}>
           <option value="draft">Draft</option><option value="sent">Trimis</option><option value="approved">Aprobat</option>
         </select>
@@ -586,6 +613,15 @@ export default function DevizeView({ user, gcalEvents }) {
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
           <div><label style={lbl}>Beneficiar</label><input style={inp} value={current.beneficiar||""} onChange={e=>setCurrent(p=>({...p,beneficiar:e.target.value}))} placeholder="Numele clientului"/></div>
           <div><label style={lbl}>Eveniment</label><input style={inp} value={current.eveniment||""} onChange={e=>setCurrent(p=>({...p,eveniment:e.target.value}))} placeholder="Tip eveniment"/></div>
+          <div><label style={lbl}>Nr. Anexă {current.client?.nrContract?`(Contract #${current.client.nrContract})`:""}</label>
+            <input style={inp} value={current.nrAnexa||""} onChange={e=>setCurrent(p=>({...p,nrAnexa:e.target.value}))} placeholder="Auto"/>
+          </div>
+          <div><label style={lbl}>Firmă facturare</label>
+            <select style={{...inp,cursor:"pointer"}} value={current.firmaFacturare||"1"} onChange={e=>setCurrent(p=>({...p,firmaFacturare:e.target.value}))}>
+              <option value="1">{current.client?.firma1||"Firmă principală"}</option>
+              {current.client?.firma2&&<option value="2">{current.client.firma2}</option>}
+            </select>
+          </div>
           <div style={{gridColumn:"1/-1"}}><label style={lbl}>Locație</label><input style={inp} value={current.locatie||""} onChange={e=>setCurrent(p=>({...p,locatie:e.target.value}))} placeholder="Locația evenimentului"/></div>
           <div><label style={lbl}>Data început</label><input type="date" style={inp} value={current.dateStart||""} onChange={e=>setCurrent(p=>({...p,dateStart:e.target.value,nrZileManual:null}))}/></div>
           <div><label style={lbl}>Data sfârșit</label><input type="date" style={inp} value={current.dateEnd||""} onChange={e=>setCurrent(p=>({...p,dateEnd:e.target.value,nrZileManual:null}))}/></div>
@@ -747,11 +783,16 @@ export default function DevizeView({ user, gcalEvents }) {
         <div style={{background:C.bg,borderRadius:10,padding:"14px 16px",border:`1.5px solid ${C.border}`}}>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.sub,marginBottom:6}}><span>Subtotal</span><span>{fmtEUR(subtotal)} EUR</span></div>
           {(discE>0||discM>0)&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.red,marginBottom:6}}><span>Discount</span><span>-{fmtEUR(subtotal-afterDisc)} EUR</span></div>}
-          {(discE>0||discM>0)&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.sub,marginBottom:6}}><span>După discount</span><span>{fmtEUR(afterDisc)} EUR</span></div>}
+          {/* After discount — highlighted blue (most clients look here) */}
+          {(discE>0||discM>0)&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:C.blueL,borderRadius:9,border:`1.5px solid #c0d4f0`,marginBottom:8}}>
+            <span style={{fontSize:13,fontWeight:700,color:C.blue}}>Valoare după discount</span>
+            <span style={{fontSize:20,fontWeight:700,color:C.blue}}>{fmtEUR(afterDisc)} EUR</span>
+          </div>}
           <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:C.sub,marginBottom:10}}><span>TVA 21%</span><span>{fmtEUR(tva)} EUR</span></div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`2px solid ${C.border}`}}>
-            <span style={{fontSize:15,fontWeight:700,color:C.text}}>TOTAL GENERAL</span>
-            <span style={{fontSize:26,fontWeight:700,color:C.blue}}>{fmtEUR(totalGen)} EUR</span>
+          {/* Grand total — gray, less prominent */}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,borderTop:`2px solid ${C.border}`,background:"#f5f5f5",margin:"0 -4px",padding:"10px 4px",borderRadius:6}}>
+            <span style={{fontSize:13,fontWeight:600,color:C.sub}}>TOTAL GENERAL (cu TVA)</span>
+            <span style={{fontSize:20,fontWeight:700,color:C.sub}}>{fmtEUR(totalGen)} EUR</span>
           </div>
         </div>
       </div>

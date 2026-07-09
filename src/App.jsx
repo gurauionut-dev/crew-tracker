@@ -514,7 +514,7 @@ export default function App() {
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
   else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
   else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"avize",label:"Avize"},{id:"settings",label:"Setări"}];
-  if (user.isViewer&&tab!=="report"&&tab!=="devize"&&tab!=="avize"&&tab!=="analytics") setTab("report");
+  if (user.isViewer&&!["report","devize","avize","analytics"].includes(tab)) setTab("report");
   // Viewers also get devize tab
   if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"}];
 
@@ -527,7 +527,7 @@ export default function App() {
 
       {/* Header */}
       <div style={{background:"#1a1a1a",borderBottom:"1px solid #222",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",paddingTop:"calc(10px + env(safe-area-inset-top))",position:"sticky",top:0,zIndex:100}}>
-        <Logo/>
+        <img src={LOGO_B64} alt="IG Vision" style={{height:28,objectFit:"contain",filter:"brightness(1.1)"}}/>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:11,color:"#4ade80",fontWeight:500,display:"flex",alignItems:"center"}}><LiveDot/>Live</span>
           <Avatar member={user} size={28}/>
@@ -575,7 +575,10 @@ function LoginScreen({ onLogin }) {
   return (
     <div style={{minHeight:"100dvh",background:"#111",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"20px 20px calc(20px + env(safe-area-inset-bottom))"}}>
       <div style={{width:"100%",maxWidth:340}}>
-        <div style={{textAlign:"center",marginBottom:36}}><Logo large/></div>
+        <div style={{textAlign:"center",marginBottom:36}}>
+          <img src={LOGO_B64} alt="IG Vision" style={{height:52,objectFit:"contain",marginBottom:8}}/>
+          <div style={{fontSize:10,color:"#555",letterSpacing:4,textTransform:"uppercase"}}>crew tracker</div>
+        </div>
         <div style={{background:"#1a1a1a",borderRadius:18,padding:24,border:"1px solid #2a2a2a"}}>
           {step==="email"&&(
             <>

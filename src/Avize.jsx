@@ -143,19 +143,27 @@ function printAviz(aviz) {
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
 export default function AvizeView({ user, gcalEvents }) {
   const [avize,      setAvize]      = useState([]);
-  const [view,       setView]       = useState("list"); // list | edit
+  const [catalog,    setCatalog]    = useState(null);
+  const [view,       setView]       = useState("list");
   const [current,    setCurrent]    = useState(null);
   const [saving,     setSaving]     = useState(false);
   const [confirmDel, setConfirmDel] = useState(null);
   const [showCal,    setShowCal]    = useState(false);
+  const [showCatalog,setShowCatalog]= useState(false);
 
   useEffect(()=>{
-    return onSnapshot(collection(db,"avize"),snap=>{
+    const u1=onSnapshot(collection(db,"avize"),snap=>{
       const list=[]; snap.forEach(d=>list.push({id:d.id,...d.data()}));
       list.sort((a,b)=>(b.updatedAt?.seconds||0)-(a.updatedAt?.seconds||0));
       setAvize(list);
     });
+    const u2=onSnapshot(doc(db,"catalog","main"),snap=>{
+      setCatalog(snap.exists()?snap.data():null);
+    });
+    return()=>{u1();u2();};
   },[]);
+
+  const allEchipCatalog = catalog?.echipamente||[];
 
   // Calendar events — last 60 days + next 30 days
   const today=new Date();
@@ -302,6 +310,21 @@ export default function AvizeView({ user, gcalEvents }) {
       {/* ECHIPAMENTE */}
       <div style={{fontSize:10,color:C.sub,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>02 · Lista echipamente</div>
       <div style={{...card,borderLeft:"4px solid #0057cc"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <span style={{fontSize:12,fontWeight:700,color:C.blue,textTransform:"uppercase",letterSpacing:"0.06em"}}>🖥️ Echipamente</span>
+          {allEchipCatalog.length>0&&<button onClick={()=>setShowCatalog(!showCatalog)} style={{...btnS,fontSize:12}}>📦 Din catalog</button>}
+        </div>
+        {showCatalog&&<div style={{marginBottom:12,background:"#f0f4fa",borderRadius:9,padding:10,border:"1.5px solid #c0d4f0",maxHeight:200,overflowY:"auto"}}>
+          {allEchipCatalog.map(item=>(
+            <div key={item.id} onClick={()=>{
+              setCurrent(p=>({...p,echipamente:[...p.echipamente,{id:uid(),denumire:item.denumire,unitate:item.unitate,cantitate:"1",serie:""}]}));
+              setShowCatalog(false);
+            }} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 10px",borderRadius:8,background:"#fff",cursor:"pointer",marginBottom:6,border:"1.5px solid #e2eaf5"}}>
+              <span style={{fontSize:13,color:C.text}}>{item.denumire}</span>
+              <span style={{fontSize:11,color:C.sub}}>{item.unitate}</span>
+            </div>
+          ))}
+        </div>}
         <div style={{display:"grid",gridTemplateColumns:"2fr 60px 60px 1fr 22px",gap:4,marginBottom:6}}>
           {["Denumire echipament","Unit.","Cant.","Serie / Nr. inventar",""].map(h=>(
             <div key={h} style={{fontSize:9,color:C.blue,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em"}}>{h}</div>
