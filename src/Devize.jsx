@@ -79,7 +79,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   const html = `<!DOCTYPE html>
 <html lang="ro"><head>
 <meta charset="UTF-8"/>
-<title>${isAviz?"Aviz":"Ofertă"} ${deviz.client?.nume||deviz.beneficiar||""}</title>
+<title>${isAviz?"Aviz":"Oferta"} ${deviz.client?.nume||deviz.beneficiar||""}${deviz.nrAnexa?" - Anexa "+deviz.nrAnexa:""}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -237,7 +237,9 @@ ${!isAviz?`
       // Fallback: download as .html file
       const a = document.createElement("a");
       a.href = "data:text/html;charset=utf-8," + encoded;
-      a.download = "deviz.html";
+      const clientName = (deviz.client?.nume||deviz.beneficiar||"igvision").replace(/\s+/g,"-").toLowerCase();
+      const anexaStr = deviz.nrAnexa ? "-anexa-"+deviz.nrAnexa : "";
+      a.download = (isAviz?"aviz":"deviz")+"-"+clientName+anexaStr+".html";
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
   } else {
