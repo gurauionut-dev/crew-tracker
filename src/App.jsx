@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { db, saveChecked, saveApproval, listenChecked, listenApprovals, saveEventColor, listenEventColors } from "./firebase";
+import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "firebase/firestore";
 import DevizeView from "./Devize";
 import RaportBusiness from "./Raport";
 import AvizeView from "./Avize";
