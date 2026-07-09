@@ -428,6 +428,10 @@ export default function DevizeView({ user, gcalEvents }) {
                   <div style={{fontSize:13,color:C.text,fontWeight:500}}>{item.denumire||item.specialitate||item.vehicul}</div>
                   <div style={{fontSize:11,color:C.sub,marginTop:1}}>{item.unitate?item.unitate+" · ":""}<span style={{color:C.blue,fontWeight:600}}>{item.pret} EUR</span></div>
                 </div>
+                <button onClick={async()=>{ if(i===0)return; const ni=[...items]; [ni[i-1],ni[i]]=[ni[i],ni[i-1]]; await saveCatalog({...cat,[type]:ni}); }}
+                  style={{...btnS,padding:"4px 8px",fontSize:13,opacity:i===0?0.25:1}} disabled={i===0}>↑</button>
+                <button onClick={async()=>{ if(i===items.length-1)return; const ni=[...items]; [ni[i],ni[i+1]]=[ni[i+1],ni[i]]; await saveCatalog({...cat,[type]:ni}); }}
+                  style={{...btnS,padding:"4px 8px",fontSize:13,opacity:i===items.length-1?0.25:1}} disabled={i===items.length-1}>↓</button>
                 <button onClick={()=>setCatEdit({type,item:{...item},isNew:false,idx:i})} style={{...btnS,padding:"5px 10px",fontSize:12}}>✏️</button>
                 <button onClick={async()=>{ const ni=[...items].filter((_,j)=>j!==i); await saveCatalog({...cat,[type]:ni}); }}
                   style={{...btnS,padding:"5px 10px",fontSize:12,color:C.red,borderColor:C.red}}>🗑</button>

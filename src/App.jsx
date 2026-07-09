@@ -282,7 +282,7 @@ function Logo({ large }) {
 }
 
 function MultiDayPill({ dayIndex, totalDays }) {
-  return <span style={{fontSize:10,background:"#252525",color:"#6b7280",padding:"2px 8px",borderRadius:20,fontWeight:600,whiteSpace:"nowrap"}}>Ziua {dayIndex+1}/{totalDays}</span>;
+  return <span style={{fontSize:10,background:"#eff6ff",color:"#3b82f6",padding:"2px 8px",borderRadius:20,fontWeight:600,whiteSpace:"nowrap",border:"1px solid #bfdbfe"}}>Ziua {dayIndex+1}/{totalDays}</span>;
 }
 
 function LiveDot() {
@@ -722,10 +722,10 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
       <button onClick={()=>setSelEvent(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#6b7280",cursor:"pointer",fontSize:14,marginBottom:16,padding:0}}>
         ‹ <span>Înapoi</span>
       </button>
-      <div style={{background:"#fff",borderRadius:16,marginBottom:12,border:"1px solid #e5e7eb",overflow:"hidden"}}>
-        {getEvColor(selEv)&&<div style={{height:4,background:getEvColor(selEv)}}/>}
-        <div style={{padding:16}}>
-        <div style={{fontSize:16,fontWeight:600,color:getEvColor(selEv)||"#111827",marginBottom:6}}>{selEv.title}</div>
+      <div style={{background:"#fff",borderRadius:16,marginBottom:12,border:`2px solid ${getEvColor(selEv)||"#e5e7eb"}`,overflow:"hidden",boxShadow:getEvColor(selEv)?`0 2px 16px ${getEvColor(selEv)}33`:"0 1px 4px rgba(0,0,0,0.06)"}}>
+        {getEvColor(selEv)&&<div style={{height:5,background:getEvColor(selEv)}}/>}
+        <div style={{padding:16,background:getEvColor(selEv)?`${getEvColor(selEv)}0a`:"#fff"}}>
+        <div style={{fontSize:17,fontWeight:700,color:getEvColor(selEv)||"#111827",marginBottom:6}}>{selEv.title}</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {selEv.isMultiDay&&<MultiDayPill dayIndex={selEv.dayIndex} totalDays={selEv.totalDays}/>}
           {selEv.location&&<span style={{fontSize:12,color:"#6b7280"}}>📍 {selEv.location}</span>}
@@ -734,7 +734,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
         </div>
       </div>
       {approval&&(
-        <div style={{padding:"12px 16px",borderRadius:12,background:approval==="approved"?"#1a2e1a":"#2a1515",fontSize:13,fontWeight:500,color:approval==="approved"?"#4ade80":"#f87171",border:`1px solid ${approval==="approved"?"#2d5a2d":"#5a2020"}`,marginBottom:12}}>
+        <div style={{padding:"12px 16px",borderRadius:12,background:approval==="approved"?"#f0fdf4":"#fef2f2",fontSize:13,fontWeight:500,color:approval==="approved"?"#16a34a":"#dc2626",border:`1px solid ${approval==="approved"?"#bbf7d0":"#fecaca"}`,marginBottom:12}}>
           {approval==="approved"?"✅ Acțiunile tale au fost aprobate.":"❌ Acțiunile au fost respinse. Contactează Crew Chief."}
         </div>
       )}
@@ -819,15 +819,15 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           const appr=getApproval(user.id,ev.id);
           const bonus=calcBonus(user.id,ev.id);
           return (
-            <div key={ev.id} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:16,overflow:"hidden",position:"relative"}}>
-              {getEvColor(ev)&&<div style={{height:4,background:getEvColor(ev),borderRadius:"16px 16px 0 0"}}/>}
-              <div style={{padding:"13px 16px"}} onClick={()=>setSelEvent(ev.id)}>
+            <div key={ev.id} style={{background:"#fff",border:`2px solid ${getEvColor(ev)||"#e5e7eb"}`,borderRadius:16,overflow:"hidden",position:"relative",boxShadow:getEvColor(ev)?`0 2px 12px ${getEvColor(ev)}22`:"0 1px 4px rgba(0,0,0,0.06)"}}>
+              {getEvColor(ev)&&<div style={{height:5,background:getEvColor(ev)}}/>}
+              <div style={{padding:"13px 16px",background:getEvColor(ev)?`${getEvColor(ev)}08`:"#fff"}} onClick={()=>setSelEvent(ev.id)}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                <span style={{fontSize:15,fontWeight:500,color:getEvColor(ev)||"#111827",lineHeight:1.3}}>{ev.title}</span>
+                <span style={{fontSize:15,fontWeight:600,color:getEvColor(ev)||"#111827",lineHeight:1.3}}>{ev.title}</span>
                 <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
                   {ev.start&&<span style={{fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
                   {user.isChief&&<button onClick={e=>{e.stopPropagation();setShowColorPicker(showColorPicker===ev.id?null:ev.id);}}
-                    style={{width:20,height:20,borderRadius:"50%",border:"2px solid #333",background:getEvColor(ev)||"#333",cursor:"pointer",flexShrink:0,padding:0}}/>}
+                    style={{width:22,height:22,borderRadius:"50%",border:getEvColor(ev)?"3px solid #fff":"2px solid #d1d5db",background:getEvColor(ev)||"#e5e7eb",cursor:"pointer",flexShrink:0,padding:0,boxShadow:getEvColor(ev)?"0 0 0 1px "+getEvColor(ev):"none"}}/>}
                 </div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:6}}>
@@ -839,7 +839,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
                   {appr==="approved"&&<span style={{fontSize:11,background:"#f0fdf4",color:"#16a34a",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #bbf7d0"}}>✓ aprobat{user.isChief?` · +${fmtRON(bonus)}`:""}</span>}
                   {appr==="rejected"&&<span style={{fontSize:11,background:"#fef2f2",color:"#dc2626",padding:"2px 8px",borderRadius:20,fontWeight:500}}>✗ respins</span>}
                   {!appr&&done.length>0&&<span style={{fontSize:11,color:"#b45309",fontWeight:500}}>⏳ în așteptare</span>}
-                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#1a2e1a",color:"#16a34a",fontWeight:500}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
+                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#f0fdf4",color:"#16a34a",fontWeight:600,border:"1px solid #bbf7d0"}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
                 </div>
               )}
               <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#9ca3af"}}>Bifează ›</span></div>
