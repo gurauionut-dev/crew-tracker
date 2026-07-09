@@ -126,7 +126,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
 <div class="header">
   <img src="${LOGO_B64}" alt="IG Vision"/>
   <div class="header-right">
-    <div class="type">${isAviz?"AVIZ DE ÎNSOȚIRE":"OFERTĂ DE PREȚ"}</div>
+    <div class="type">${isAviz?"AVIZ DE ÎNSOȚIRE":"RENT"}</div>
     ${nrAnexaStr?`<div class="anexa">${nrAnexaStr}</div>`:""}
     <div class="date">${new Date().toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})}</div>
   </div>
