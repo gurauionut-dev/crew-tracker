@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { db, saveChecked, saveApproval, listenChecked, listenApprovals, saveEventColor, listenEventColors } from "./firebase";
 import DevizeView from "./Devize";
 import RaportBusiness from "./Raport";
+import AvizeView from "./Avize";
 import { LOGO_B64 } from "./logo_igvision";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -298,7 +299,7 @@ function Toast({ msg }) {
 }
 
 function BottomNav({ tabs, tab, setTab, pendingCount }) {
-  const icons = {today:"📅",approve:"✅",report:"📊",devize:"📋",analytics:"📈",settings:"⚙️"};
+  const icons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
   return (
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#1a1a1a",borderTop:"1px solid #2a2a2a",display:"flex",zIndex:50,paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
@@ -511,11 +512,11 @@ export default function App() {
 
   let tabs=[];
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
-  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
-  else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"settings",label:"Setări"}];
-  if (user.isViewer&&tab!=="report"&&tab!=="devize") setTab("report");
+  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
+  else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"avize",label:"Avize"},{id:"settings",label:"Setări"}];
+  if (user.isViewer&&tab!=="report"&&tab!=="devize"&&tab!=="avize"&&tab!=="analytics") setTab("report");
   // Viewers also get devize tab
-  if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"analytics",label:"Business"}];
+  if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"}];
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
@@ -540,6 +541,7 @@ export default function App() {
         {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
         {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
         {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
+        {tab==="avize"&&<AvizeView user={user} gcalEvents={gcalEvents}/>}
         {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
       </div>
 

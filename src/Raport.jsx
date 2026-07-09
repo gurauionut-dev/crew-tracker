@@ -190,7 +190,7 @@ export default function RaportBusiness() {
       </div>
 
       {/* Total general */}
-      <div style={{...S.sec,background:"#1a2e1a",border:"1px solid #2d5a2d",marginBottom:16}}>
+      <div style={{background:"#e8f0ff",border:"1.5px solid #c0d4f0",borderRadius:14,padding:16,marginBottom:16,boxShadow:"0 2px 8px rgba(0,80,200,0.08)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div>
             <div style={{fontSize:12,color:"#0057cc",fontWeight:600}}>TOTAL GENERAL (cu TVA)</div>
