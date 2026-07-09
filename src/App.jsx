@@ -276,13 +276,13 @@ function Logo({ large }) {
       <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:large?32:17,fontWeight:700,letterSpacing:large?5:2,background:"linear-gradient(135deg,#777 0%,#fff 40%,#aaa 60%,#555 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",lineHeight:1,filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.5))"}}>
         ig vision<sup style={{fontSize:large?12:7,WebkitTextFillColor:"transparent",background:"inherit",WebkitBackgroundClip:"text"}}>™</sup>
       </div>
-      {large&&<div style={{fontSize:11,color:"#555",letterSpacing:4,textTransform:"uppercase"}}>crew tracker</div>}
+      {large&&<div style={{fontSize:11,color:"#6b7280",letterSpacing:4,textTransform:"uppercase"}}>crew tracker</div>}
     </div>
   );
 }
 
 function MultiDayPill({ dayIndex, totalDays }) {
-  return <span style={{fontSize:10,background:"#252525",color:"#888",padding:"2px 8px",borderRadius:20,fontWeight:600,whiteSpace:"nowrap"}}>Ziua {dayIndex+1}/{totalDays}</span>;
+  return <span style={{fontSize:10,background:"#252525",color:"#6b7280",padding:"2px 8px",borderRadius:20,fontWeight:600,whiteSpace:"nowrap"}}>Ziua {dayIndex+1}/{totalDays}</span>;
 }
 
 function LiveDot() {
@@ -292,7 +292,7 @@ function LiveDot() {
 function Toast({ msg }) {
   if (!msg) return null;
   return (
-    <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",background:"#1a1a1a",color:"#e8e8e6",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:500,whiteSpace:"nowrap",zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,0.6)",border:"1px solid #333",maxWidth:"88vw",overflow:"hidden",textOverflow:"ellipsis"}}>
+    <div style={{position:"fixed",bottom:"calc(80px + env(safe-area-inset-bottom))",left:"50%",transform:"translateX(-50%)",background:"#fff",color:"#111827",padding:"10px 22px",borderRadius:24,fontSize:13,fontWeight:500,whiteSpace:"nowrap",zIndex:9999,boxShadow:"0 4px 20px rgba(0,0,0,0.6)",border:"1px solid #e5e7eb",maxWidth:"88vw",overflow:"hidden",textOverflow:"ellipsis"}}>
       {msg}
     </div>
   );
@@ -301,15 +301,15 @@ function Toast({ msg }) {
 function BottomNav({ tabs, tab, setTab, pendingCount }) {
   const icons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
   return (
-    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#1a1a1a",borderTop:"1px solid #2a2a2a",display:"flex",zIndex:50,paddingBottom:"env(safe-area-inset-bottom)"}}>
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#fff",borderTop:"1px solid #e5e7eb",display:"flex",zIndex:50,paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>{
         const active=tab===t.id;
         return (
           <button key={t.id} onClick={()=>setTab(t.id)}
             style={{flex:1,padding:"10px 4px 8px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
             <span style={{fontSize:20}}>{icons[t.id]}</span>
-            <span style={{fontSize:10,fontWeight:active?600:400,color:active?"#e8e8e6":"#555"}}>{t.label}</span>
-            {active&&<div style={{position:"absolute",bottom:0,left:"25%",right:"25%",height:2,background:"#e8e8e6",borderRadius:2}}/>}
+            <span style={{fontSize:10,fontWeight:active?600:400,color:active?"#111827":"#555"}}>{t.label}</span>
+            {active&&<div style={{position:"absolute",bottom:0,left:"25%",right:"25%",height:2,background:"#111827",borderRadius:2}}/>}
             {t.id==="approve"&&pendingCount>0&&<span style={{position:"absolute",top:6,right:"22%",width:16,height:16,borderRadius:"50%",background:"#ef4444",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pendingCount}</span>}
           </button>
         );
@@ -323,19 +323,19 @@ function DayNav({ day, setDay, compact }) {
   const isToday=toKey(day)===toKey(today);
   return (
     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:compact?12:16}}>
-      <button onClick={()=>setDay(addDays(day,-1))} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#888",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+      <button onClick={()=>setDay(addDays(day,-1))} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#6b7280",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>‹</button>
       <div style={{flex:1,textAlign:"center"}}>
-        <div style={{fontSize:compact?13:14,fontWeight:600,color:"#e8e8e6",textTransform:"capitalize"}}>{compact?fmtDateShort(day):fmtDate(day)}</div>
-        {isToday&&<div style={{fontSize:10,color:"#4ade80"}}>azi</div>}
+        <div style={{fontSize:compact?14:15,fontWeight:700,color:"#111827",textTransform:"capitalize"}}>{compact?fmtDateShort(day):fmtDate(day)}</div>
+        {isToday&&<span style={{fontSize:10,background:"#16a34a",color:"#fff",padding:"1px 8px",borderRadius:20,fontWeight:600,display:"inline-block",marginTop:2}}>azi</span>}
       </div>
-      <button onClick={()=>setDay(addDays(day,1))} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#888",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
+      <button onClick={()=>setDay(addDays(day,1))} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#6b7280",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>›</button>
     </div>
   );
 }
 
 function EmptyDay({ loading }) {
   return (
-    <div style={{textAlign:"center",padding:"48px 20px",color:"#444",fontSize:14}}>
+    <div style={{textAlign:"center",padding:"48px 20px",color:"#9ca3af",fontSize:14}}>
       <div style={{fontSize:36,marginBottom:12}}>{loading?"⏳":"📭"}</div>
       {loading?"Se încarcă din Google Calendar...":"Nicio activare în această zi"}
     </div>
@@ -556,7 +556,7 @@ export default function App() {
             <Avatar member={user} size={28}/>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:12,fontWeight:600,color:"#f9fafb",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.name.split(" ")[0]}</div>
-              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:1}}><LiveDot/><span style={{fontSize:10,color:"#4ade80",fontWeight:500}}>Live</span></div>
+              <div style={{display:"flex",alignItems:"center",gap:4,marginTop:1}}><LiveDot/><span style={{fontSize:10,color:"#16a34a",fontWeight:500}}>Live</span></div>
             </div>
             <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} title="Ieși"
               style={{background:"none",border:"none",cursor:"pointer",color:"#6b7280",fontSize:18,padding:0,lineHeight:1}}>↩</button>
@@ -570,7 +570,7 @@ export default function App() {
         <div className="mobile-bar" style={{background:"#111827",padding:"10px 16px",alignItems:"center",justifyContent:"space-between",paddingTop:"calc(10px + env(safe-area-inset-top))",position:"sticky",top:0,zIndex:50,borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
           <img src={LOGO_B64} alt="IG Vision" style={{height:26,objectFit:"contain"}}/>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <LiveDot/><span style={{fontSize:10,color:"#4ade80",fontWeight:500}}>Live</span>
+            <LiveDot/><span style={{fontSize:10,color:"#16a34a",fontWeight:500}}>Live</span>
             <Avatar member={user} size={26}/>
             <button onClick={()=>{setUser(null);setTab("today");setSelEvent(null);}} style={{background:"none",border:"1px solid #374151",borderRadius:6,padding:"3px 8px",fontSize:11,color:"#9ca3af",cursor:"pointer"}}>Ieși</button>
           </div>
@@ -663,16 +663,16 @@ function LoginScreen({ onLogin }) {
                 <Avatar member={cur} size={36}/>
                 <div style={{flex:1}}>
                   <div style={{fontSize:14,fontWeight:600,color:"#f9fafb"}}>{cur.name}</div>
-                  <div style={{fontSize:11,color:"#555"}}>{cur.email}</div>
+                  <div style={{fontSize:11,color:"#6b7280"}}>{cur.email}</div>
                 </div>
-                <button onClick={()=>{setStep("email");setPassword("");setError("");}} style={{fontSize:11,color:"#666",background:"none",border:"none",cursor:"pointer"}}>Schimbă</button>
+                <button onClick={()=>{setStep("email");setPassword("");setError("");}} style={{fontSize:11,color:"#9ca3af",background:"none",border:"none",cursor:"pointer"}}>Schimbă</button>
               </div>
               <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:8,textTransform:"uppercase",letterSpacing:"0.08em"}}>Parolă</label>
               <div style={{position:"relative",marginBottom:error?8:20}}>
                 <input type={showPwd?"text":"password"} value={password} onChange={e=>{setPassword(e.target.value);setError("");}}
                   onKeyDown={e=>e.key==="Enter"&&login()} placeholder="••••••••" autoFocus
                   style={{width:"100%",padding:"13px 48px 13px 14px",borderRadius:10,border:error?"1px solid #ef4444":"1px solid rgba(255,255,255,0.1)",fontSize:15,color:"#f9fafb",outline:"none",background:"rgba(255,255,255,0.05)",boxSizing:"border-box"}}/>
-                <button onClick={()=>setShowPwd(!showPwd)} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#555",padding:0,lineHeight:1}}>
+                <button onClick={()=>setShowPwd(!showPwd)} style={{position:"absolute",right:14,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:18,color:"#6b7280",padding:0,lineHeight:1}}>
                   {showPwd?"🙈":"👁"}
                 </button>
               </div>
@@ -718,18 +718,18 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
   }
 
   if (selEv) return (
-    <div style={{padding:"16px 16px 0"}}>
-      <button onClick={()=>setSelEvent(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#888",cursor:"pointer",fontSize:14,marginBottom:16,padding:0}}>
+    <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
+      <button onClick={()=>setSelEvent(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#6b7280",cursor:"pointer",fontSize:14,marginBottom:16,padding:0}}>
         ‹ <span>Înapoi</span>
       </button>
-      <div style={{background:"#1a1a1a",borderRadius:16,marginBottom:12,border:"1px solid #2a2a2a",overflow:"hidden"}}>
+      <div style={{background:"#fff",borderRadius:16,marginBottom:12,border:"1px solid #e5e7eb",overflow:"hidden"}}>
         {getEvColor(selEv)&&<div style={{height:4,background:getEvColor(selEv)}}/>}
         <div style={{padding:16}}>
-        <div style={{fontSize:16,fontWeight:600,color:getEvColor(selEv)||"#e8e8e6",marginBottom:6}}>{selEv.title}</div>
+        <div style={{fontSize:16,fontWeight:600,color:getEvColor(selEv)||"#111827",marginBottom:6}}>{selEv.title}</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {selEv.isMultiDay&&<MultiDayPill dayIndex={selEv.dayIndex} totalDays={selEv.totalDays}/>}
-          {selEv.location&&<span style={{fontSize:12,color:"#555"}}>📍 {selEv.location}</span>}
-          {selEv.start&&<span style={{fontSize:12,color:"#555"}}>{selEv.start}{selEv.end?`–${selEv.end}`:""}</span>}
+          {selEv.location&&<span style={{fontSize:12,color:"#6b7280"}}>📍 {selEv.location}</span>}
+          {selEv.start&&<span style={{fontSize:12,color:"#6b7280"}}>{selEv.start}{selEv.end?`–${selEv.end}`:""}</span>}
         </div>
         </div>
       </div>
@@ -738,7 +738,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           {approval==="approved"?"✅ Acțiunile tale au fost aprobate.":"❌ Acțiunile au fost respinse. Contactează Crew Chief."}
         </div>
       )}
-      <div style={{fontSize:11,fontWeight:600,color:"#444",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>
+      <div style={{fontSize:11,fontWeight:600,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:10}}>
         {isLocked?"Acțiunile bifate":"Ce ai făcut AZI?"}
       </div>
       <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
@@ -748,32 +748,32 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           if (action.key==="observatii") {
             const noteVal = typeof myCheck["observatii"]==="string" ? myCheck["observatii"] : "";
             return (
-              <div key="observatii" style={{borderRadius:14,border:"1px solid #222",background:"#1a1a1a",overflow:"hidden"}}>
+              <div key="observatii" style={{borderRadius:14,border:"1px solid #e5e7eb",background:"#fff",overflow:"hidden"}}>
                 <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px"}}>
                   <span style={{fontSize:20}}>📝</span>
-                  <span style={{fontSize:15,color:"#ccc"}}>Observații</span>
+                  <span style={{fontSize:15,color:"#374151"}}>Observații</span>
                 </div>
                 {!isLocked ? (
                   <textarea value={noteVal}
                     onChange={e=>toggleMyAction(selEv.id,"observatii",e.target.value)}
                     placeholder="Scrie observații..."
                     rows={3}
-                    style={{width:"100%",padding:"10px 16px",background:"#111",border:"none",borderTop:"1px solid #222",color:"#ccc",fontSize:14,resize:"none",outline:"none",boxSizing:"border-box",fontFamily:"inherit",lineHeight:1.5}}
+                    style={{width:"100%",padding:"10px 16px",background:"#f8fafc",border:"none",borderTop:"1px solid #e5e7eb",color:"#374151",fontSize:14,resize:"none",outline:"none",boxSizing:"border-box",fontFamily:"inherit",lineHeight:1.5}}
                   />
                 ) : noteVal ? (
-                  <div style={{padding:"8px 16px 12px",fontSize:13,color:"#888",fontStyle:"italic",borderTop:"1px solid #222"}}>"{noteVal}"</div>
+                  <div style={{padding:"8px 16px 12px",fontSize:13,color:"#6b7280",fontStyle:"italic",borderTop:"1px solid #e5e7eb"}}>"{noteVal}"</div>
                 ) : null}
               </div>
             );
           }
           return (
             <div key={action.key} onClick={()=>!isLocked&&toggleMyAction(selEv.id,action.key)}
-              style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderRadius:14,border:`1px solid ${on?"#2d5a2d":"#222"}`,background:on?"#1a2e1a":"#1a1a1a",cursor:isLocked?"default":"pointer",opacity:isLocked&&!on?0.35:1,transition:"all 0.1s"}}>
+              style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderRadius:14,border:`1.5px solid ${on?"#16a34a":"#e5e7eb"}`,background:on?"#f0fdf4":"#fff",cursor:isLocked?"default":"pointer",opacity:isLocked&&!on?0.35:1,transition:"all 0.1s"}}>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <span style={{fontSize:22}}>{action.icon}</span>
-                <span style={{fontSize:16,fontWeight:on?500:400,color:on?"#86efac":"#ccc"}}>{action.label}</span>
+                <span style={{fontSize:16,fontWeight:on?500:400,color:on?"#15803d":"#374151"}}>{action.label}</span>
               </div>
-              <div style={{width:26,height:26,borderRadius:8,border:on?"none":"2px solid #333",background:on?"#4ade80":"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:"#111",fontSize:14,fontWeight:700,flexShrink:0}}>
+              <div style={{width:26,height:26,borderRadius:8,border:on?"none":"2px solid #333",background:on?"#16a34a":"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:"#111",fontSize:14,fontWeight:700,flexShrink:0}}>
                 {on&&"✓"}
               </div>
             </div>
@@ -782,20 +782,20 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
       </div>
       {!isLocked&&(
         <>
-          <div style={{background:"#1a1a1a",border:"1px solid #222",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#555"}}>
+          <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280"}}>
               <span>Acțiuni bifate</span>
-              <span style={{fontWeight:600,color:"#888"}}>{Object.values(myCheck).filter(Boolean).length} / {myActions.length}</span>
+              <span style={{fontWeight:600,color:"#6b7280"}}>{Object.values(myCheck).filter(Boolean).length} / {myActions.length}</span>
             </div>
             {user.isChief&&myTotal>0&&(
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,marginTop:10,borderTop:"1px solid #222"}}>
-                <span style={{fontSize:14,color:"#888"}}>Total estimat</span>
-                <span style={{fontSize:22,fontWeight:700,color:"#4ade80"}}>+{fmtRON(myTotal)}</span>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:10,marginTop:10,borderTop:"1px solid #e5e7eb"}}>
+                <span style={{fontSize:14,color:"#6b7280"}}>Total estimat</span>
+                <span style={{fontSize:22,fontWeight:700,color:"#16a34a"}}>+{fmtRON(myTotal)}</span>
               </div>
             )}
           </div>
           <button onClick={()=>{showToast("✅ Trimis spre aprobare!"); setSelEvent(null);}}
-            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#e8e8e6",color:"#111",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8}}>
+            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#111827",color:"#111",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8}}>
             Trimite spre aprobare →
           </button>
         </>
@@ -804,12 +804,12 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
   );
 
   return (
-    <div style={{padding:"16px 16px 0"}}>
+    <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
       <DayNav day={day} setDay={setDay} compact/>
       {calError&&<div style={{background:"#2a1515",border:"1px solid #5a2020",borderRadius:12,padding:"10px 14px",marginBottom:12,fontSize:13,color:"#f87171"}}>⚠ {calError}</div>}
-      <div style={{background:"#1a1a1a",border:"1px solid #222",borderRadius:12,padding:"8px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
-        <LiveDot/><span style={{fontSize:12,color:"#666"}}>Google Calendar</span>
-        <span style={{fontSize:12,color:"#444",marginLeft:"auto"}}>{calLoading?"Se încarcă...":`${events.length} activăr${events.length===1?"e":"i"}`}</span>
+      <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,padding:"8px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+        <LiveDot/><span style={{fontSize:12,color:"#9ca3af"}}>Google Calendar</span>
+        <span style={{fontSize:12,color:"#9ca3af",marginLeft:"auto"}}>{calLoading?"Se încarcă...":`${events.length} activăr${events.length===1?"e":"i"}`}</span>
       </div>
       {(events.length===0||calLoading)&&<EmptyDay loading={calLoading}/>}
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -819,41 +819,41 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           const appr=getApproval(user.id,ev.id);
           const bonus=calcBonus(user.id,ev.id);
           return (
-            <div key={ev.id} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,overflow:"hidden",position:"relative"}}>
+            <div key={ev.id} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:16,overflow:"hidden",position:"relative"}}>
               {getEvColor(ev)&&<div style={{height:4,background:getEvColor(ev),borderRadius:"16px 16px 0 0"}}/>}
               <div style={{padding:"13px 16px"}} onClick={()=>setSelEvent(ev.id)}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
-                <span style={{fontSize:15,fontWeight:500,color:getEvColor(ev)||"#e8e8e6",lineHeight:1.3}}>{ev.title}</span>
+                <span style={{fontSize:15,fontWeight:500,color:getEvColor(ev)||"#111827",lineHeight:1.3}}>{ev.title}</span>
                 <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-                  {ev.start&&<span style={{fontSize:11,color:"#555",whiteSpace:"nowrap"}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
+                  {ev.start&&<span style={{fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{ev.start}{ev.end?`–${ev.end}`:""}</span>}
                   {user.isChief&&<button onClick={e=>{e.stopPropagation();setShowColorPicker(showColorPicker===ev.id?null:ev.id);}}
                     style={{width:20,height:20,borderRadius:"50%",border:"2px solid #333",background:getEvColor(ev)||"#333",cursor:"pointer",flexShrink:0,padding:0}}/>}
                 </div>
               </div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",marginBottom:6}}>
                 {ev.isMultiDay&&<MultiDayPill dayIndex={ev.dayIndex} totalDays={ev.totalDays}/>}
-                {ev.location&&<span style={{fontSize:12,color:"#555"}}>📍 {ev.location}</span>}
+                {ev.location&&<span style={{fontSize:12,color:"#6b7280"}}>📍 {ev.location}</span>}
               </div>
               {(done.length>0||appr)&&(
                 <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:6}}>
-                  {appr==="approved"&&<span style={{fontSize:11,background:"#1a2e1a",color:"#4ade80",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #2d5a2d"}}>✓ aprobat{user.isChief?` · +${fmtRON(bonus)}`:""}</span>}
-                  {appr==="rejected"&&<span style={{fontSize:11,background:"#2a1515",color:"#f87171",padding:"2px 8px",borderRadius:20,fontWeight:500}}>✗ respins</span>}
-                  {!appr&&done.length>0&&<span style={{fontSize:11,color:"#f59e0b",fontWeight:500}}>⏳ în așteptare</span>}
-                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#1a2e1a",color:"#4ade80",fontWeight:500}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
+                  {appr==="approved"&&<span style={{fontSize:11,background:"#f0fdf4",color:"#16a34a",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #bbf7d0"}}>✓ aprobat{user.isChief?` · +${fmtRON(bonus)}`:""}</span>}
+                  {appr==="rejected"&&<span style={{fontSize:11,background:"#fef2f2",color:"#dc2626",padding:"2px 8px",borderRadius:20,fontWeight:500}}>✗ respins</span>}
+                  {!appr&&done.length>0&&<span style={{fontSize:11,color:"#b45309",fontWeight:500}}>⏳ în așteptare</span>}
+                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#1a2e1a",color:"#16a34a",fontWeight:500}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
                 </div>
               )}
-              <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#333"}}>Bifează ›</span></div>
+              <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#9ca3af"}}>Bifează ›</span></div>
               </div>
               {showColorPicker===ev.id&&(
-                <div style={{padding:"12px 14px",background:"#111",borderTop:"1px solid #222"}} onClick={e=>e.stopPropagation()}>
-                  <div style={{fontSize:11,color:"#666",marginBottom:8}}>Alege culoarea evenimentului:</div>
+                <div style={{padding:"12px 14px",background:"#f8fafc",borderTop:"1px solid #e5e7eb"}} onClick={e=>e.stopPropagation()}>
+                  <div style={{fontSize:11,color:"#9ca3af",marginBottom:8}}>Alege culoarea evenimentului:</div>
                   <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}}>
                     {COLOR_PALETTE.map(c=>(
                       <button key={c} onClick={()=>handleColorSelect(ev,c)}
                         style={{width:28,height:28,borderRadius:"50%",border:getEvColor(ev)===c?"3px solid #fff":"2px solid transparent",background:c,cursor:"pointer",padding:0,flexShrink:0}}/>
                     ))}
                     <button onClick={()=>handleColorSelect(ev,null)}
-                      style={{width:28,height:28,borderRadius:"50%",border:"2px solid #444",background:"transparent",cursor:"pointer",padding:0,fontSize:14,color:"#666",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                      style={{width:28,height:28,borderRadius:"50%",border:"2px solid #444",background:"transparent",cursor:"pointer",padding:0,fontSize:14,color:"#9ca3af",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
                   </div>
                 </div>
               )}
@@ -862,9 +862,9 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
         })}
       </div>
       {events.length>0&&user.isChief&&(
-        <div style={{margin:"16px 0 0",background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:13,color:"#555"}}>Total aprobat azi</span>
-          <span style={{fontSize:20,fontWeight:700,color:"#4ade80"}}>+{fmtRON(calcDayTotal(user.id))}</span>
+        <div style={{margin:"16px 0 0",background:"#fff",border:"1px solid #e5e7eb",borderRadius:14,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontSize:13,color:"#6b7280"}}>Total aprobat azi</span>
+          <span style={{fontSize:20,fontWeight:700,color:"#16a34a"}}>+{fmtRON(calcDayTotal(user.id))}</span>
         </div>
       )}
     </div>
@@ -914,7 +914,7 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
   }
 
   return (
-    <div style={{padding:"16px 16px 0"}}>
+    <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
 
       {/* Pending section */}
       {calLoading && <EmptyDay loading/>}
@@ -926,11 +926,11 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
       {pendingItems.length>0 && (
         <>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:12,fontWeight:600,color:"#888",textTransform:"uppercase",letterSpacing:"0.06em"}}>
+            <div style={{fontSize:12,fontWeight:600,color:"#6b7280",textTransform:"uppercase",letterSpacing:"0.06em"}}>
               {pendingItems.length} în așteptare
             </div>
             <button onClick={approveAll}
-              style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+              style={{fontSize:12,padding:"6px 14px",borderRadius:8,border:"none",background:"#16a34a",color:"#fff",fontWeight:700,cursor:"pointer"}}>
               ✓ Aprobă tot
             </button>
           </div>
@@ -943,34 +943,34 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
               const bonus=calcBonus(member.id,ev.id);
               const dateLabel=new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
               return (
-                <div key={key} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,overflow:"hidden"}}>
+                <div key={key} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:14,overflow:"hidden"}}>
                   {/* Header */}
-                  <div style={{padding:"12px 14px",borderBottom:"1px solid #222",display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{padding:"12px 14px",borderBottom:"1px solid #e5e7eb",display:"flex",alignItems:"center",gap:10}}>
                     <Avatar member={member} size={34}/>
                     <div style={{flex:1}}>
-                      <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6"}}>{member.name}</div>
-                      <div style={{fontSize:11,color:"#555"}}>{ev.title} · {dateLabel}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</div>
+                      <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{member.name}</div>
+                      <div style={{fontSize:11,color:"#6b7280"}}>{ev.title} · {dateLabel}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</div>
                     </div>
-                    <span style={{fontSize:11,background:"#2a2000",color:"#f59e0b",padding:"2px 8px",borderRadius:20,fontWeight:500}}>⏳</span>
+                    <span style={{fontSize:11,background:"#fffbeb",color:"#b45309",padding:"2px 8px",borderRadius:20,fontWeight:500}}>⏳</span>
                   </div>
                   {/* Body */}
                   <div style={{padding:"12px 14px"}}>
                     <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
                       {activeActs.map(a=>(
-                        <span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:"#1a2e1a",color:"#4ade80",fontWeight:500}}>
+                        <span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:"#1a2e1a",color:"#16a34a",fontWeight:500}}>
                           {a.icon} {a.label} · {fmtRON(getAmount(member.id,ev.id,a.key))}
                         </span>
                       ))}
                     </div>
                     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                      <span style={{fontSize:18,fontWeight:700,color:"#4ade80"}}>+{fmtRON(bonus)}</span>
+                      <span style={{fontSize:18,fontWeight:700,color:"#16a34a"}}>+{fmtRON(bonus)}</span>
                       <div style={{display:"flex",gap:6}}>
                         <button onClick={()=>setEditOpen(isOpen?null:key)}
-                          style={{fontSize:12,padding:"7px 12px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#888",cursor:"pointer"}}>
+                          style={{fontSize:12,padding:"7px 12px",borderRadius:8,border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer"}}>
                           ✏️ Modifică
                         </button>
                         <button onClick={()=>doApprove(member.id,ev.id,activeActs)}
-                          style={{fontSize:12,padding:"7px 14px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+                          style={{fontSize:12,padding:"7px 14px",borderRadius:8,border:"none",background:"#16a34a",color:"#fff",fontWeight:700,cursor:"pointer"}}>
                           ✓ Aprobă
                         </button>
                         <button onClick={()=>setApprovalStatus(member.id,ev.id,"rejected",{})}
@@ -982,26 +982,26 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
                   </div>
                   {/* Edit amounts panel */}
                   {isOpen && (
-                    <div style={{padding:"14px",background:"#111",borderTop:"1px solid #222"}}>
-                      <div style={{fontSize:12,color:"#666",marginBottom:12}}>Modifică suma per acțiune:</div>
+                    <div style={{padding:"14px",background:"#f8fafc",borderTop:"1px solid #e5e7eb"}}>
+                      <div style={{fontSize:12,color:"#9ca3af",marginBottom:12}}>Modifică suma per acțiune:</div>
                       <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
                         {activeActs.map(a=>(
                           <div key={a.key} style={{display:"flex",alignItems:"center",gap:10}}>
                             <span style={{fontSize:18}}>{a.icon}</span>
-                            <span style={{fontSize:14,flex:1,color:"#ccc",fontWeight:500}}>{a.label}</span>
+                            <span style={{fontSize:14,flex:1,color:"#374151",fontWeight:500}}>{a.label}</span>
                             <input type="number" value={getEdit(member.id,ev.id,a.key)}
                               onChange={e=>setEdit(member.id,ev.id,a.key,e.target.value)}
-                              style={{width:80,padding:"8px 10px",borderRadius:8,border:"1px solid #333",background:"#1a1a1a",fontSize:15,fontWeight:600,textAlign:"right",color:"#e8e8e6"}}/>
-                            <span style={{fontSize:12,color:"#555",width:28}}>RON</span>
+                              style={{width:80,padding:"8px 10px",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",fontSize:15,fontWeight:600,textAlign:"right",color:"#111827"}}/>
+                            <span style={{fontSize:12,color:"#6b7280",width:28}}>RON</span>
                           </div>
                         ))}
                       </div>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#1a2e1a",borderRadius:10,marginBottom:10,border:"1px solid #2d5a2d"}}>
-                        <span style={{fontSize:13,color:"#4ade80"}}>Total de plătit</span>
-                        <span style={{fontSize:20,fontWeight:700,color:"#4ade80"}}>+{fmtRON(editTotal)}</span>
+                        <span style={{fontSize:13,color:"#16a34a"}}>Total de plătit</span>
+                        <span style={{fontSize:20,fontWeight:700,color:"#16a34a"}}>+{fmtRON(editTotal)}</span>
                       </div>
                       <button onClick={()=>doApprove(member.id,ev.id,activeActs)}
-                        style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:"#4ade80",color:"#111",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                        style={{width:"100%",padding:"12px",borderRadius:10,border:"none",background:"#16a34a",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                         ✓ Aprobă cu sumele modificate
                       </button>
                     </div>
@@ -1016,7 +1016,7 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
       {/* Approved section */}
       {approvedItems.length>0 && (
         <>
-          <div style={{fontSize:12,fontWeight:600,color:"#444",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>
+          <div style={{fontSize:12,fontWeight:600,color:"#9ca3af",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>
             {approvedItems.length} aprobate
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -1025,16 +1025,16 @@ function ApproveView({ user, gcalEvents, getChecked, getApproval, setApprovalSta
               const bonus=calcBonus(member.id,ev.id);
               const dateLabel=new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"});
               return (
-                <div key={key} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,opacity:0.7}}>
+                <div key={key} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,opacity:0.7}}>
                   <Avatar member={member} size={30}/>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{member.name.split(" ")[0]} · {ev.title}</div>
-                    <div style={{fontSize:11,color:"#555"}}>{dateLabel}</div>
+                    <div style={{fontSize:13,fontWeight:500,color:"#374151"}}>{member.name.split(" ")[0]} · {ev.title}</div>
+                    <div style={{fontSize:11,color:"#6b7280"}}>{dateLabel}</div>
                   </div>
-                  <span style={{fontSize:14,fontWeight:700,color:"#4ade80"}}>+{fmtRON(bonus)}</span>
-                  <span style={{fontSize:11,background:"#1a2e1a",color:"#4ade80",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #2d5a2d"}}>✓</span>
+                  <span style={{fontSize:14,fontWeight:700,color:"#16a34a"}}>+{fmtRON(bonus)}</span>
+                  <span style={{fontSize:11,background:"#f0fdf4",color:"#16a34a",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #bbf7d0"}}>✓</span>
                   <button onClick={()=>setApprovalStatus(member.id,ev.id,null,{})}
-                    style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #333",background:"transparent",color:"#555",cursor:"pointer"}}>
+                    style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer"}}>
                     Anulează
                   </button>
                 </div>
@@ -1093,38 +1093,38 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
   }
 
   return (
-    <div style={{padding:"16px 16px 0"}}>
+    <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
       {/* Mode toggle */}
-      <div style={{display:"flex",gap:6,marginBottom:16,background:"#1a1a1a",borderRadius:12,padding:4,border:"1px solid #2a2a2a"}}>
-        <button onClick={()=>setMode("lunar")} style={{flex:1,padding:"8px",borderRadius:9,border:"none",background:mode==="lunar"?"#2a2a2a":"transparent",color:mode==="lunar"?"#e8e8e6":"#555",fontSize:13,fontWeight:mode==="lunar"?600:400,cursor:"pointer"}}>📅 Lunar</button>
-        <button onClick={()=>setMode("custom")} style={{flex:1,padding:"8px",borderRadius:9,border:"none",background:mode==="custom"?"#2a2a2a":"transparent",color:mode==="custom"?"#e8e8e6":"#555",fontSize:13,fontWeight:mode==="custom"?600:400,cursor:"pointer"}}>📆 Perioadă</button>
+      <div style={{display:"flex",gap:6,marginBottom:16,background:"#fff",borderRadius:12,padding:4,border:"1px solid #e5e7eb"}}>
+        <button onClick={()=>setMode("lunar")} style={{flex:1,padding:"8px",borderRadius:9,border:"none",background:mode==="lunar"?"#e5e7eb":"transparent",color:mode==="lunar"?"#111827":"#555",fontSize:13,fontWeight:mode==="lunar"?600:400,cursor:"pointer"}}>📅 Lunar</button>
+        <button onClick={()=>setMode("custom")} style={{flex:1,padding:"8px",borderRadius:9,border:"none",background:mode==="custom"?"#e5e7eb":"transparent",color:mode==="custom"?"#111827":"#555",fontSize:13,fontWeight:mode==="custom"?600:400,cursor:"pointer"}}>📆 Perioadă</button>
       </div>
 
       {/* Navigation */}
       {mode==="lunar"&&(
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-          <button onClick={()=>setRm(new Date(rm.getFullYear(),rm.getMonth()-1,1))} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#888",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>‹</button>
-          <div style={{flex:1,textAlign:"center",fontSize:14,fontWeight:600,color:"#e8e8e6",textTransform:"capitalize"}}>{fmtMonth(rm)}</div>
-          <button onClick={()=>setRm(new Date(rm.getFullYear(),rm.getMonth()+1,1))} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#888",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>›</button>
+          <button onClick={()=>setRm(new Date(rm.getFullYear(),rm.getMonth()-1,1))} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#6b7280",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>‹</button>
+          <div style={{flex:1,textAlign:"center",fontSize:14,fontWeight:600,color:"#111827",textTransform:"capitalize"}}>{fmtMonth(rm)}</div>
+          <button onClick={()=>setRm(new Date(rm.getFullYear(),rm.getMonth()+1,1))} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,width:36,height:36,cursor:"pointer",fontSize:16,color:"#6b7280",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>›</button>
         </div>
       )}
       {mode==="custom"&&(
         <div style={{display:"flex",gap:8,marginBottom:16,alignItems:"center"}}>
           <div style={{flex:1}}>
-            <label style={{fontSize:10,color:"#555",display:"block",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>De la</label>
+            <label style={{fontSize:10,color:"#6b7280",display:"block",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>De la</label>
             <input type="date" value={dateFrom} onChange={e=>setDateFrom(e.target.value)}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:14,outline:"none"}}/>
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",color:"#111827",fontSize:14,outline:"none"}}/>
           </div>
           <div style={{flex:1}}>
-            <label style={{fontSize:10,color:"#555",display:"block",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>Până la</label>
+            <label style={{fontSize:10,color:"#6b7280",display:"block",marginBottom:4,textTransform:"uppercase",letterSpacing:"0.05em"}}>Până la</label>
             <input type="date" value={dateTo} onChange={e=>setDateTo(e.target.value)}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:14,outline:"none"}}/>
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #e5e7eb",background:"#fff",color:"#111827",fontSize:14,outline:"none"}}/>
           </div>
         </div>
       )}
 
       {/* Download button */}
-      <button onClick={downloadReport} style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #2a2a2a",background:"#1a1a1a",color:"#e8e8e6",fontSize:14,fontWeight:500,cursor:"pointer",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+      <button onClick={downloadReport} style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #e5e7eb",background:"#fff",color:"#111827",fontSize:14,fontWeight:500,cursor:"pointer",marginBottom:16,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         "📄 Descarcă raport PDF"
       </button>
 
@@ -1134,40 +1134,40 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
           const details=getDetail(member.id);
           const total=details.reduce((s,d)=>s+d.total,0);
           return (
-            <div key={member.id} style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16}}>
+            <div key={member.id} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,padding:16,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"}}>
               <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
                 <Avatar member={member} size={40}/>
                 <div style={{flex:1}}>
-                  <div style={{fontSize:15,fontWeight:600,color:"#e8e8e6"}}>{member.name}</div>
-                  <div style={{fontSize:12,color:"#555"}}>{details.length} zile lucrate</div>
+                  <div style={{fontSize:15,fontWeight:600,color:"#111827"}}>{member.name}</div>
+                  <div style={{fontSize:12,color:"#6b7280"}}>{details.length} zile lucrate</div>
                 </div>
-                <div style={{fontSize:22,fontWeight:700,color:total>0?"#4ade80":"#333"}}>
+                <div style={{fontSize:22,fontWeight:700,color:total>0?"#16a34a":"#9ca3af"}}>
                   {total>0?`+${fmtRON(total)}`:"—"}
                 </div>
               </div>
               {details.length>0&&(
-                <div style={{borderTop:"1px solid #222",paddingTop:10}}>
+                <div style={{borderTop:"1px solid #e5e7eb",paddingTop:10}}>
                   {details.map(({ev,acts,total:evT})=>(
-                    <div key={ev.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 0",borderBottom:"1px solid #1a1a1a"}}>
+                    <div key={ev.id} style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"7px 0",borderBottom:"1px solid #f3f4f6"}}>
                       <div style={{flex:1,marginRight:8}}>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           {eventColors[ev.originalId||ev.id]&&<div style={{width:8,height:8,borderRadius:"50%",background:eventColors[ev.originalId||ev.id],flexShrink:0}}/>}
                           <div style={{fontSize:13,color:eventColors[ev.originalId||ev.id]||"#ccc",fontWeight:500}}>{ev.title}</div>
                         </div>
                         <div style={{display:"flex",gap:4,marginTop:3,flexWrap:"wrap",alignItems:"center"}}>
-                          <span style={{fontSize:10,color:"#555"}}>{new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</span>
-                          {acts.filter(a=>a.key!=="observatii").map(a=><span key={a.key} style={{fontSize:10,padding:"1px 6px",borderRadius:20,background:"#1a2e1a",color:"#4ade80"}}>{a.icon} {a.label}</span>)}
+                          <span style={{fontSize:10,color:"#6b7280"}}>{new Date(ev.dayKey+"T12:00:00").toLocaleDateString("ro-RO",{day:"numeric",month:"short"})}{ev.isMultiDay?` · Z${ev.dayIndex+1}`:""}</span>
+                          {acts.filter(a=>a.key!=="observatii").map(a=><span key={a.key} style={{fontSize:10,padding:"1px 6px",borderRadius:20,background:"#1a2e1a",color:"#16a34a"}}>{a.icon} {a.label}</span>)}
                         </div>
                         {typeof getChecked(member.id,ev.id)["observatii"]==="string" && getChecked(member.id,ev.id)["observatii"] && (
-                          <div style={{fontSize:11,color:"#666",fontStyle:"italic",marginTop:3}}>📝 {getChecked(member.id,ev.id)["observatii"]}</div>
+                          <div style={{fontSize:11,color:"#9ca3af",fontStyle:"italic",marginTop:3}}>📝 {getChecked(member.id,ev.id)["observatii"]}</div>
                         )}
                       </div>
-                      <span style={{fontSize:14,fontWeight:700,color:"#4ade80",flexShrink:0}}>+{fmtRON(evT)}</span>
+                      <span style={{fontSize:14,fontWeight:700,color:"#16a34a",flexShrink:0}}>+{fmtRON(evT)}</span>
                     </div>
                   ))}
                   <div style={{display:"flex",justifyContent:"space-between",paddingTop:10,marginTop:4}}>
-                    <span style={{fontSize:13,fontWeight:600,color:"#666"}}>TOTAL</span>
-                    <span style={{fontSize:18,fontWeight:700,color:"#4ade80"}}>+{fmtRON(total)}</span>
+                    <span style={{fontSize:13,fontWeight:600,color:"#9ca3af"}}>TOTAL</span>
+                    <span style={{fontSize:18,fontWeight:700,color:"#16a34a"}}>+{fmtRON(total)}</span>
                   </div>
                 </div>
               )}
@@ -1177,13 +1177,13 @@ function ReportView({ user, gcalEvents, getChecked, getApproval, getAmount, even
       </div>
 
       {grandTotal>0&&(
-        <div style={{background:"#1a2e1a",border:"1px solid #2d5a2d",borderRadius:16,padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={{fontSize:14,fontWeight:600,color:"#4ade80"}}>TOTAL GENERAL</span>
-          <span style={{fontSize:26,fontWeight:700,color:"#4ade80"}}>+{fmtRON(grandTotal)}</span>
+        <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:12,padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+          <span style={{fontSize:14,fontWeight:600,color:"#16a34a"}}>TOTAL GENERAL</span>
+          <span style={{fontSize:26,fontWeight:700,color:"#16a34a"}}>+{fmtRON(grandTotal)}</span>
         </div>
       )}
       {crew.every(m=>getDetail(m.id).length===0)&&(
-        <div style={{textAlign:"center",padding:"40px 0",color:"#444",fontSize:14}}>
+        <div style={{textAlign:"center",padding:"40px 0",color:"#9ca3af",fontSize:14}}>
           <div style={{fontSize:36,marginBottom:12}}>📊</div>
           Nicio activare aprobată în această perioadă.
         </div>
@@ -1218,34 +1218,34 @@ function SettingsView({ user }) {
   function getBonuses(uid) { return savedBonuses[uid] || getUserBonuses(uid); }
 
   return (
-    <div style={{padding:"16px 16px 0"}}>
+    <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
       {!isTech && (
-        <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
-          <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Bonusuri per persoană</div>
+        <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:16,padding:16,marginBottom:14}}>
+          <div style={{fontSize:14,fontWeight:600,color:"#111827",marginBottom:14}}>Bonusuri per persoană</div>
           {TEAM.filter(m=>!m.isViewer).map(m=>{
             const acts=getUserActions(m.id);
             const bns=getBonuses(m.id);
             const isEditingThis = editing===m.id;
             return (
-              <div key={m.id} style={{marginBottom:16,padding:"12px 14px",background:"#111",borderRadius:12,border:"1px solid #222"}}>
+              <div key={m.id} style={{marginBottom:16,padding:"12px 14px",background:"#f8fafc",borderRadius:12,border:"1px solid #e5e7eb"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
                   <Avatar member={m} size={28}/>
-                  <span style={{fontSize:13,fontWeight:600,color:"#e8e8e6",flex:1}}>{m.name}</span>
-                  {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#7eb8f7",padding:"1px 7px",borderRadius:20,fontWeight:600}}>CHIEF</span>}
+                  <span style={{fontSize:13,fontWeight:600,color:"#111827",flex:1}}>{m.name}</span>
+                  {m.isChief&&<span style={{fontSize:9,background:"#1e3a5f",color:"#3b82f6",padding:"1px 7px",borderRadius:20,fontWeight:600}}>CHIEF</span>}
                   {user.isChief && !m.isChief && !isEditingThis && (
                     <button onClick={()=>startEdit(m.id)}
-                      style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#888",cursor:"pointer"}}>
+                      style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #e5e7eb",background:"transparent",color:"#6b7280",cursor:"pointer"}}>
                       ✏️ Editează
                     </button>
                   )}
                   {isEditingThis && (
                     <div style={{display:"flex",gap:6}}>
                       <button onClick={()=>saveEdit(m.id)}
-                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"none",background:"#4ade80",color:"#111",fontWeight:700,cursor:"pointer"}}>
+                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"none",background:"#16a34a",color:"#fff",fontWeight:700,cursor:"pointer"}}>
                         ✓ Salvează
                       </button>
                       <button onClick={()=>setEditing(null)}
-                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #333",background:"transparent",color:"#666",cursor:"pointer"}}>
+                        style={{fontSize:11,padding:"4px 10px",borderRadius:8,border:"1px solid #e5e7eb",background:"transparent",color:"#9ca3af",cursor:"pointer"}}>
                         Anulează
                       </button>
                     </div>
@@ -1256,17 +1256,17 @@ function SettingsView({ user }) {
                     {acts.map(a=>(
                       <div key={a.key} style={{display:"flex",alignItems:"center",gap:10}}>
                         <span style={{fontSize:15}}>{a.icon}</span>
-                        <span style={{fontSize:13,flex:1,color:"#ccc"}}>{a.label}</span>
+                        <span style={{fontSize:13,flex:1,color:"#374151"}}>{a.label}</span>
                         <input type="number" value={tempBonus[a.key]??0}
                           onChange={e=>setTempBonus(p=>({...p,[a.key]:parseFloat(e.target.value)||0}))}
-                          style={{width:75,padding:"6px 8px",borderRadius:8,border:"1px solid #333",background:"#1a1a1a",fontSize:14,fontWeight:600,textAlign:"right",color:"#e8e8e6"}}/>
-                        <span style={{fontSize:12,color:"#555",width:28}}>RON</span>
+                          style={{width:75,padding:"6px 8px",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",fontSize:14,fontWeight:600,textAlign:"right",color:"#111827"}}/>
+                        <span style={{fontSize:12,color:"#6b7280",width:28}}>RON</span>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-                    {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#1a2e1a":"#222",color:bns[a.key]>0?"#4ade80":"#555",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
+                    {acts.map(a=><span key={a.key} style={{fontSize:11,padding:"3px 9px",borderRadius:20,background:bns[a.key]>0?"#f0fdf4":"#f3f4f6",color:bns[a.key]>0?"#16a34a":"#6b7280",fontWeight:500}}>{a.icon} {a.label}: {bns[a.key]>0?fmtRON(bns[a.key]):"—"}</span>)}
                   </div>
                 )}
               </div>
@@ -1274,37 +1274,37 @@ function SettingsView({ user }) {
           })}
         </div>
       )}
-      <div style={{background:"#1a1a1a",border:"1px solid #2a2a2a",borderRadius:16,padding:16,marginBottom:14}}>
-        <div style={{fontSize:14,fontWeight:600,color:"#e8e8e6",marginBottom:14}}>Echipa</div>
+      <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:16,padding:16,marginBottom:14}}>
+        <div style={{fontSize:14,fontWeight:600,color:"#111827",marginBottom:14}}>Echipa</div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {TEAM.map(m=>(
-            <div key={m.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#111",border:"1px solid #222",borderRadius:12}}>
+            <div key={m.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#f8fafc",border:"1px solid #e5e7eb",borderRadius:12}}>
               <Avatar member={m} size={34}/>
               <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:500,color:"#ccc"}}>{m.name}</div>
-                <div style={{fontSize:11,color:"#555"}}>{m.email}</div>
+                <div style={{fontSize:13,fontWeight:500,color:"#374151"}}>{m.name}</div>
+                <div style={{fontSize:11,color:"#6b7280"}}>{m.email}</div>
               </div>
               <div style={{display:"flex",gap:4,alignItems:"center"}}>
                 <span style={{fontSize:9,background:m.isChief?"#1e3a5f":m.isViewer?"#222":"#1a2e1a",color:m.isChief?"#7eb8f7":m.isViewer?"#555":"#4ade80",padding:"2px 8px",borderRadius:20,fontWeight:600,letterSpacing:0.5}}>
                   {m.isChief?"CHIEF":m.isViewer?"VIEWER":"TECH"}
                 </span>
-                {m.id===user.id&&<span style={{fontSize:10,color:"#333"}}>← tu</span>}
+                {m.id===user.id&&<span style={{fontSize:10,color:"#9ca3af"}}>← tu</span>}
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div style={{background:"#111",border:"1px solid #1e3a5f",borderRadius:16,padding:16,marginBottom:14}}>
-        <div style={{fontSize:13,fontWeight:600,color:"#7eb8f7",marginBottom:8}}>🔥 Firebase — Live Sync</div>
-        <div style={{fontSize:11,color:"#4ade80"}}>● Conectat · Date sincronizate în timp real</div>
-        <div style={{fontSize:11,color:"#555",marginTop:4}}>Proiect: crew-tracker-led</div>
+      <div style={{background:"#f8fafc",border:"1px solid #1e3a5f",borderRadius:16,padding:16,marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:600,color:"#3b82f6",marginBottom:8}}>🔥 Firebase — Live Sync</div>
+        <div style={{fontSize:11,color:"#16a34a"}}>● Conectat · Date sincronizate în timp real</div>
+        <div style={{fontSize:11,color:"#6b7280",marginTop:4}}>Proiect: crew-tracker-led</div>
       </div>
-      <div style={{background:"#111",border:"1px solid #1e3a5f",borderRadius:16,padding:16,marginBottom:14}}>
-        <div style={{fontSize:13,fontWeight:600,color:"#7eb8f7",marginBottom:8}}>📆 Google Calendar</div>
-        <div style={{fontSize:11,color:"#4ade80"}}>● Conectat și activ</div>
-        <div style={{fontSize:11,color:"#555",marginTop:4,wordBreak:"break-all"}}>{CALENDAR_ID}</div>
+      <div style={{background:"#f8fafc",border:"1px solid #1e3a5f",borderRadius:16,padding:16,marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:600,color:"#3b82f6",marginBottom:8}}>📆 Google Calendar</div>
+        <div style={{fontSize:11,color:"#16a34a"}}>● Conectat și activ</div>
+        <div style={{fontSize:11,color:"#6b7280",marginTop:4,wordBreak:"break-all"}}>{CALENDAR_ID}</div>
       </div>
-      <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:11,color:"#333"}}>ig vision™ crew tracker · www.igvision.ro</div>
+      <div style={{textAlign:"center",padding:"16px 0 8px",fontSize:11,color:"#9ca3af"}}>ig vision™ crew tracker · www.igvision.ro</div>
     </div>
   );
 }
