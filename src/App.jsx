@@ -837,7 +837,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
             )}
           </div>
           <button onClick={()=>{showToast("✅ Trimis spre aprobare!"); setSelEvent(null);}}
-            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#111827",color:"#111",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8}}>
+            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#2563eb",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8,boxShadow:"0 2px 8px rgba(37,99,235,0.3)"}}>
             Trimite spre aprobare →
           </button>
         </>
