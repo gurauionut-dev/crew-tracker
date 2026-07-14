@@ -69,8 +69,10 @@ export default function RaportBusiness() {
       const cant=parseFloat(r.cantitate||1);
       const pret=parseFloat(r.pret||r.pretBaza||0);
       const unitate=r.unitate||"item";
+      // Use per-row zile, fall back to global
       const rz=parseFloat(r.zile||nrZileGlobal||1);
-      const revenue=pret*cant*rz*(1-discE);
+      const rm=getMultiplier(rz);
+      const revenue=pret*cant*rz*rm*(1-discE);
       if (!echipStats[key]) echipStats[key]={denumire:key,unitate,totalCant:0,totalRevenue:0,nrDevize:0};
       echipStats[key].totalCant    += cant*rz; // mp × zile efectiv devizate
       echipStats[key].totalRevenue += revenue;
@@ -109,7 +111,7 @@ export default function RaportBusiness() {
     const nrZg=dev.nrZileManual?parseInt(dev.nrZileManual):calcZile(dev.dateStart,dev.dateEnd);
     const dE=parseFloat(dev.discountEchip||0)/100;
     const dM=parseFloat(dev.discountManop||0)/100;
-    const tE=(dev.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*parseFloat(r.zile||nrZg||1)*(1-dE)),0);
+    const tE=(dev.echipamente||[]).filter(r=>r.denumire).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return s+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
     const tM=(dev.manopera||[]).filter(r=>r.specialitate).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
     const tT=(dev.transport||[]).filter(r=>r.vehicul).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
     return d+(tE+tM+tT)*1.21;
@@ -123,7 +125,7 @@ export default function RaportBusiness() {
       const nrZg=d.nrZileManual?parseInt(d.nrZileManual):calcZile(d.dateStart,d.dateEnd);
       const dE=parseFloat(d.discountEchip||0)/100;
       const dM=parseFloat(d.discountManop||0)/100;
-      const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((ss,r)=>ss+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*parseFloat(r.zile||nrZg||1)*(1-dE)),0);
+      const tE=(d.echipamente||[]).filter(r=>r.denumire).reduce((ss,r)=>{ const rz=parseFloat(r.zile||nrZg||1); return ss+(parseFloat(r.pret||r.pretBaza||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)*(1-dE)); },0);
       const tM=(d.manopera||[]).filter(r=>r.specialitate).reduce((ss,r)=>ss+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)*(1-dM)),0);
       const tT=(d.transport||[]).filter(r=>r.vehicul).reduce((ss,r)=>ss+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
       return s+(tE+tM+tT);
@@ -143,14 +145,6 @@ export default function RaportBusiness() {
 
   return (
     <div style={{padding:"16px 16px 24px",fontFamily:"'DM Sans',sans-serif",background:"#f0f4fa",minHeight:"100vh"}}>
-
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-        <div>
-          <div style={{fontSize:22,fontWeight:500,color:"#111827",letterSpacing:"-0.3px"}}>Business</div>
-          <div style={{fontSize:12,color:"#6b7280"}}>Analytics din devize aprobate</div>
-        </div>
-      </div>
-
 
       {/* Period selector */}
       <div style={{display:"flex",gap:6,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
