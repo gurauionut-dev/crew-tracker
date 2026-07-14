@@ -264,6 +264,7 @@ export default function DevizeView({ user, gcalEvents }) {
   const [catEdit,     setCatEdit]     = useState(null);
   const [clientEdit,  setClientEdit]  = useState(null);
   const [confirmDel,  setConfirmDel]  = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(()=>{
     const u1=onSnapshot(collection(db,"devize"),snap=>{
@@ -517,17 +518,28 @@ export default function DevizeView({ user, gcalEvents }) {
   // LIST VIEW
   if (view==="list") return (
     <div style={{padding:16,background:C.bg,minHeight:"100vh"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontSize:18,fontWeight:700,color:C.blue}}>Devize & Oferte</div>
-        <button onClick={newDeviz} style={btnP}>+ Deviz nou</button>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div>
+          <div style={{fontSize:22,fontWeight:500,color:"#111827",letterSpacing:"-0.3px"}}>Devize</div>
+          <div style={{fontSize:12,color:C.sub,marginTop:2}}>{clienti.length} clienți · {devize.length} oferte</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setView("catalog")} style={{...btnS,display:"inline-flex",alignItems:"center",gap:6}}><i className="ti ti-package" style={{fontSize:14}}></i>Catalog</button>
+          <button onClick={()=>setView("clienti")} style={{...btnS,display:"inline-flex",alignItems:"center",gap:6}}><i className="ti ti-users" style={{fontSize:14}}></i>Clienți</button>
+          <button onClick={newDeviz} style={{...btnP,display:"inline-flex",alignItems:"center",gap:6,background:"#111827"}}><i className="ti ti-plus" style={{fontSize:14}}></i>Deviz nou</button>
+        </div>
       </div>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("catalog")} style={btnS}>📦 Catalog</button>
-        <button onClick={()=>setView("clienti")} style={btnS}>👥 Clienți ({clienti.length})</button>
+      {/* Status filters */}
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        <button onClick={()=>setStatusFilter("all")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="all"?"#111827":"#e5e7eb"}`,background:statusFilter==="all"?"#111827":"#fff",color:statusFilter==="all"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Toate ({devize.length})</button>
+        <button onClick={()=>setStatusFilter("draft")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="draft"?"#111827":"#e5e7eb"}`,background:statusFilter==="draft"?"#111827":"#fff",color:statusFilter==="draft"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Draft ({devize.filter(d=>(d.status||"draft")==="draft").length})</button>
+        <button onClick={()=>setStatusFilter("sent")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="sent"?"#111827":"#e5e7eb"}`,background:statusFilter==="sent"?"#111827":"#fff",color:statusFilter==="sent"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Trimis ({devize.filter(d=>d.status==="sent").length})</button>
+        <button onClick={()=>setStatusFilter("approved")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="approved"?"#111827":"#e5e7eb"}`,background:statusFilter==="approved"?"#111827":"#fff",color:statusFilter==="approved"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Aprobat ({devize.filter(d=>d.status==="approved").length})</button>
       </div>
+
       {devize.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.sub}}><div style={{fontSize:36,marginBottom:10}}>📋</div><div style={{fontSize:14,color:C.text}}>Niciun deviz salvat</div><div style={{fontSize:12,marginTop:4}}>Apasă "+ Deviz nou" pentru a începe</div></div>}
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {devize.map(d=>{
+        {devize.filter(d=>statusFilter==="all"||(d.status||"draft")===statusFilter).map(d=>{
           const rz_e=d.echipamente||[], rz_m=d.manopera||[], rz_t=d.transport||[];
           const tE=rz_e.reduce((s,r)=>{ const rz=parseFloat(r.zile||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)); },0);
           const tM=rz_m.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)),0);

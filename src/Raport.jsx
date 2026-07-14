@@ -146,6 +146,14 @@ export default function RaportBusiness() {
   return (
     <div style={{padding:"16px 16px 24px",fontFamily:"'DM Sans',sans-serif",background:"#f0f4fa",minHeight:"100vh"}}>
 
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div>
+          <div style={{fontSize:22,fontWeight:500,color:"#111827",letterSpacing:"-0.3px"}}>Business</div>
+          <div style={{fontSize:12,color:"#6b7280"}}>Analytics din devize aprobate</div>
+        </div>
+      </div>
+
+
       {/* Period selector */}
       <div style={{display:"flex",gap:6,marginBottom:16,alignItems:"center",flexWrap:"wrap"}}>
         <div style={{display:"flex",gap:4,background:"#e8f0ff",borderRadius:10,padding:3,border:"1.5px solid #c0d4f0"}}>
