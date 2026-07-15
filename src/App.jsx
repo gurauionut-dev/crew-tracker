@@ -4,6 +4,7 @@ import { doc, setDoc, collection, onSnapshot, serverTimestamp } from "firebase/f
 import DevizeView from "./Devize";
 import RaportBusiness from "./Raport";
 import AvizeView from "./Avize";
+import OferteView from "./Oferte";
 import { LOGO_B64 } from "./logo_igvision";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -531,16 +532,19 @@ export default function App() {
 
   let tabs=[];
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
-  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
+  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"oferte",label:"Oferte"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
   else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"avize",label:"Avize"},{id:"settings",label:"Setări"}];
-  if (user.isViewer&&!["report","devize","avize","analytics"].includes(tab)) setTab("report");
+  if (user.isViewer&&!["report","devize","oferte","avize","analytics"].includes(tab)) setTab("report");
   // Viewers also get devize tab
-  if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"}];
+  if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"oferte",label:"Oferte"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"}];
 
   const pending = user.isChief?getPendingCount():0;
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
-  const sidebarIcons = {today:"📅",approve:"✅",report:"📊",devize:"📋",avize:"📦",analytics:"📈",settings:"⚙️"};
-  const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",avize:"Avize",analytics:"Business",settings:"Setări"};
+  const sidebarIcons = {
+    today:"ti-calendar",approve:"ti-checks",report:"ti-chart-bar",
+    devize:"ti-file-text",oferte:"ti-briefcase",avize:"ti-package",analytics:"ti-trending-up",settings:"ti-settings"
+  };
+  const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",oferte:"Oferte",avize:"Avize",analytics:"Business",settings:"Setări"};
 
   return (
     <div style={{minHeight:"100dvh",display:"flex",background:"#f0f4fa"}}>
@@ -558,13 +562,14 @@ export default function App() {
 
       {/* ── SIDEBAR desktop ── */}
       <div className="sidebar-wrap" style={{width:220,flexShrink:0,background:"#111827",flexDirection:"column",height:"100dvh",position:"sticky",top:0,paddingTop:"env(safe-area-inset-top)"}}>
-        <div style={{padding:"20px 16px 14px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-          <img src={LOGO_B64} alt="IG Vision" style={{height:30,objectFit:"contain",filter:"brightness(1.1)"}}/>
+        <div style={{padding:"18px 16px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <img src={LOGO_B64} alt="IG Vision" style={{height:26,objectFit:"contain",filter:"brightness(1.15)",display:"block"}}/>
+          <div style={{fontSize:9,color:"#4b5563",letterSpacing:"2.5px",marginTop:6,fontWeight:600,textTransform:"uppercase"}}>Crew Tracker</div>
         </div>
         <nav style={{flex:1,padding:"10px 10px",overflowY:"auto"}}>
           {tabs.map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)} className={`nav-item${tab===t.id?" active":""}`}>
-              <span className="nav-icon">{sidebarIcons[t.id]}</span>
+              <i className={`ti ${sidebarIcons[t.id]}`} style={{fontSize:16,width:22,textAlign:"center",flexShrink:0}}></i>
               <span style={{flex:1}}>{sidebarLabels[t.id]||t.label}</span>
               {t.id==="approve"&&pending>0&&<span style={{background:"#ef4444",color:"#fff",fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:20}}>{pending}</span>}
             </button>
@@ -625,6 +630,7 @@ export default function App() {
           {tab==="report"                  &&<ReportView  user={user} gcalEvents={gcalEvents} getChecked={getChecked} getApproval={getApproval} getAmount={getAmount} eventColors={eventColors}/>}
           {tab==="settings"&&!user.isViewer&&<SettingsView user={user}/>}
           {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
+          {tab==="oferte"&&(user.isChief||user.isViewer)&&<OferteView user={user} gcalEvents={gcalEvents}/>}
           {tab==="avize"&&<AvizeView user={user} gcalEvents={gcalEvents}/>}
           {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
         </div>
@@ -636,7 +642,7 @@ export default function App() {
             return (
               <button key={t.id} onClick={()=>setTab(t.id)}
                 style={{flex:1,padding:"10px 2px 8px",background:"none",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative"}}>
-                <span style={{fontSize:18}}>{sidebarIcons[t.id]}</span>
+                <i className={`ti ${sidebarIcons[t.id]}`} style={{fontSize:19,color:active?"#60a5fa":"#6b7280"}}></i>
                 <span style={{fontSize:9,fontWeight:active?600:400,color:active?"#60a5fa":"#6b7280"}}>{sidebarLabels[t.id]||t.label}</span>
                 {active&&<div style={{position:"absolute",bottom:0,left:"20%",right:"20%",height:2,background:"#60a5fa",borderRadius:2}}/>}
                 {t.id==="approve"&&pending>0&&<span style={{position:"absolute",top:5,right:"15%",width:14,height:14,borderRadius:"50%",background:"#ef4444",color:"#fff",fontSize:8,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{pending}</span>}
@@ -764,9 +770,9 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
       <button onClick={()=>setSelEvent(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#6b7280",cursor:"pointer",fontSize:14,marginBottom:16,padding:0}}>
         ‹ <span>Înapoi</span>
       </button>
-      <div style={{background:"#fff",borderRadius:16,marginBottom:12,border:`2px solid ${getEvColor(selEv)||"#e5e7eb"}`,overflow:"hidden",boxShadow:getEvColor(selEv)?`0 2px 16px ${getEvColor(selEv)}33`:"0 1px 4px rgba(0,0,0,0.06)"}}>
-        {getEvColor(selEv)&&<div style={{height:5,background:getEvColor(selEv)}}/>}
-        <div style={{padding:16,background:getEvColor(selEv)?`${getEvColor(selEv)}0a`:"#fff"}}>
+      <div style={{background:"#fff",borderRadius:12,marginBottom:12,border:"1px solid #e5e7eb",borderLeft:`3px solid ${getEvColor(selEv)||"#3b82f6"}`,overflow:"hidden",boxShadow:getEvColor(selEv)?`0 2px 16px ${getEvColor(selEv)}33`:"0 1px 4px rgba(0,0,0,0.06)"}}>
+        
+        <div style={{padding:14}}>
         <div style={{fontSize:17,fontWeight:700,color:getEvColor(selEv)||"#111827",marginBottom:6}}>{selEv.title}</div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
           {selEv.isMultiDay&&<MultiDayPill dayIndex={selEv.dayIndex} totalDays={selEv.totalDays}/>}
@@ -837,7 +843,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
             )}
           </div>
           <button onClick={()=>{showToast("✅ Trimis spre aprobare!"); setSelEvent(null);}}
-            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#111827",color:"#111",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8}}>
+            style={{width:"100%",padding:"16px",borderRadius:14,border:"none",background:"#2563eb",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",marginBottom:8,boxShadow:"0 2px 8px rgba(37,99,235,0.3)"}}>
             Trimite spre aprobare →
           </button>
         </>
@@ -847,7 +853,33 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
 
   return (
     <div style={{padding:"16px 16px 24px",background:"#f0f4fa",minHeight:"100vh"}}>
-      <DayNav day={day} setDay={setDay} compact/>
+      <div style={{marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16,flexWrap:"wrap",gap:12}}>
+          <div>
+            <div style={{fontSize:11,color:"#6b7280",letterSpacing:"1px",fontWeight:500,textTransform:"uppercase"}}>{day.toLocaleDateString("ro-RO",{weekday:"long"})}</div>
+            <div style={{fontSize:22,fontWeight:500,color:"#111827",letterSpacing:"-0.3px",textTransform:"capitalize"}}>{day.toLocaleDateString("ro-RO",{day:"numeric",month:"long",year:"numeric"})}</div>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setDay(addDays(day,-1))} style={{width:32,height:32,borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",fontSize:14,color:"#6b7280",cursor:"pointer",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>‹</button>
+            <button onClick={()=>{const t=new Date();t.setHours(0,0,0,0);setDay(t);}} style={{padding:"0 14px",height:32,borderRadius:8,border:"1px solid #e5e7eb",background:toKey(day)===toKey(new Date())?"#111827":"#fff",color:toKey(day)===toKey(new Date())?"#fff":"#111827",fontSize:12,cursor:"pointer",fontWeight:500}}>Azi</button>
+            <button onClick={()=>setDay(addDays(day,1))} style={{width:32,height:32,borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",fontSize:14,color:"#6b7280",cursor:"pointer",display:"inline-flex",alignItems:"center",justifyContent:"center"}}>›</button>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+          <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#6b7280",letterSpacing:"0.5px",marginBottom:4,fontWeight:500,textTransform:"uppercase"}}>Evenimente</div>
+            <div style={{fontSize:22,fontWeight:500,color:"#111827"}}>{events.length}</div>
+          </div>
+          <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#6b7280",letterSpacing:"0.5px",marginBottom:4,fontWeight:500,textTransform:"uppercase"}}>Bifate</div>
+            <div style={{fontSize:22,fontWeight:500,color:"#111827"}}>{events.filter(ev=>Object.values(getChecked(user.id,ev.id)||{}).some(Boolean)).length}<span style={{fontSize:12,color:"#9ca3af",fontWeight:400}}> / {events.length}</span></div>
+          </div>
+          <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,padding:"12px 14px"}}>
+            <div style={{fontSize:10,color:"#6b7280",letterSpacing:"0.5px",marginBottom:4,fontWeight:500,textTransform:"uppercase"}}>Bonus estimat</div>
+            <div style={{fontSize:22,fontWeight:500,color:"#059669"}}>+{calcDayTotal(user.id).toFixed(0)}<span style={{fontSize:12,color:"#9ca3af",fontWeight:400}}> RON</span></div>
+          </div>
+        </div>
+      </div>
       {calError&&<div style={{background:"#2a1515",border:"1px solid #5a2020",borderRadius:12,padding:"10px 14px",marginBottom:12,fontSize:13,color:"#f87171"}}>⚠ {calError}</div>}
       <div style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:12,padding:"8px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
         <LiveDot/><span style={{fontSize:12,color:"#9ca3af"}}>Google Calendar</span>
@@ -861,9 +893,9 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
           const appr=getApproval(user.id,ev.id);
           const bonus=calcBonus(user.id,ev.id);
           return (
-            <div key={ev.id} style={{background:"#fff",border:`2px solid ${getEvColor(ev)||"#e5e7eb"}`,borderRadius:16,overflow:"hidden",position:"relative",boxShadow:getEvColor(ev)?`0 2px 12px ${getEvColor(ev)}22`:"0 1px 4px rgba(0,0,0,0.06)"}}>
-              {getEvColor(ev)&&<div style={{height:5,background:getEvColor(ev)}}/>}
-              <div style={{padding:"13px 16px",background:getEvColor(ev)?`${getEvColor(ev)}08`:"#fff"}} onClick={()=>setSelEvent(ev.id)}>
+            <div key={ev.id} style={{background:"#fff",border:"1px solid #e5e7eb",borderLeft:`3px solid ${getEvColor(ev)||"#e5e7eb"}`,borderRadius:12,overflow:"hidden",position:"relative",boxShadow:getEvColor(ev)?`0 2px 12px ${getEvColor(ev)}22`:"0 1px 4px rgba(0,0,0,0.06)"}}>
+              
+              <div style={{padding:"12px 14px"}} onClick={()=>setSelEvent(ev.id)}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:6}}>
                 <span style={{fontSize:15,fontWeight:600,color:getEvColor(ev)||"#111827",lineHeight:1.3}}>{ev.title}</span>
                 <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
@@ -881,7 +913,7 @@ function TodayView({ user, day, setDay, events, selEvent, setSelEvent, getChecke
                   {appr==="approved"&&<span style={{fontSize:11,background:"#f0fdf4",color:"#16a34a",padding:"2px 8px",borderRadius:20,fontWeight:500,border:"1px solid #bbf7d0"}}>✓ aprobat{user.isChief?` · +${fmtRON(bonus)}`:""}</span>}
                   {appr==="rejected"&&<span style={{fontSize:11,background:"#fef2f2",color:"#dc2626",padding:"2px 8px",borderRadius:20,fontWeight:500}}>✗ respins</span>}
                   {!appr&&done.length>0&&<span style={{fontSize:11,color:"#b45309",fontWeight:500}}>⏳ în așteptare</span>}
-                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#f0fdf4",color:"#16a34a",fontWeight:600,border:"1px solid #bbf7d0"}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
+                  {done.map(k=><span key={k} style={{fontSize:10,padding:"1px 7px",borderRadius:20,background:"#f0fdf4",color:"#166534",fontWeight:500,border:"1px solid #bbf7d0"}}>✓ {ACTIONS.find(a=>a.key===k)?.label}</span>)}
                 </div>
               )}
               <div style={{textAlign:"right"}}><span style={{fontSize:12,color:"#9ca3af"}}>Bifează ›</span></div>

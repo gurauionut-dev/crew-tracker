@@ -59,7 +59,7 @@ function printDoc(deviz, mode="deviz") { // mode: "deviz" | "aviz"
   const transpRows= (deviz.transport||[]).filter(r=>r.vehicul);
 
   // Totals (only for deviz)
-  const totE = echipRows.reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZileGlobal||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)); },0);
+  const totE = echipRows.reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZileGlobal||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz); },0);
   const totM = manopRows.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)),0);
   const totT = transpRows.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
   const subtotal  = totE+totM+totT;
@@ -148,19 +148,19 @@ ${echipRows.length>0?`
   <table><thead><tr>
     <th width="24">Nr.</th><th style="text-align:left">Denumire echipament</th>
     <th width="48">Unitate</th>
-    ${isAviz?`<th width="44">Cantitate</th>`:`<th width="44">Cant.</th><th width="54">Preț EUR/U</th><th width="44">Zile</th><th width="34">Mult</th><th width="68">Total EUR</th>`}
+    ${isAviz?`<th width="44">Cantitate</th>`:`<th width="44">Cant.</th><th width="60">Preț EUR/U</th><th width="44">Zile</th><th width="76">Total EUR</th>`}
   </tr></thead><tbody>
   ${echipRows.map((r,i)=>{
     const p=parseFloat(r.pret||0), c=parseFloat(r.cantitate||1);
-    const rz=parseFloat(r.zile||nrZileGlobal||1), rm=getMultiplier(rz);
-    const tot=(p*c*rz*rm).toFixed(2);
+    const rz=parseFloat(r.zile||nrZileGlobal||1);
+    const tot=(p*c*rz).toFixed(2);
     return `<tr>
       <td>${i+1}</td><td class="left">${r.denumire}</td>
       <td>${r.unitate||""}</td>
-      ${isAviz?`<td>${c}</td>`:`<td>${c}</td><td>${p.toFixed(2)}</td><td>${rz}</td><td>${rm}x</td><td>${tot}</td>`}
+      ${isAviz?`<td>${c}</td>`:`<td>${c}</td><td>${p.toFixed(2)}</td><td>${rz}</td><td>${tot}</td>`}
     </tr>`;
   }).join("")}
-  ${isAviz?"":`<tr class="tot-row"><td colspan="7" style="text-align:right;padding-right:10px;">Total</td><td>${totE.toFixed(2)} EUR</td></tr>`}
+  ${isAviz?"":`<tr class="tot-row"><td colspan="6" style="text-align:right;padding-right:10px;">Total</td><td>${totE.toFixed(2)} EUR</td></tr>`}
   </tbody></table>
 </div>`:""}
 
@@ -264,6 +264,7 @@ export default function DevizeView({ user, gcalEvents }) {
   const [catEdit,     setCatEdit]     = useState(null);
   const [clientEdit,  setClientEdit]  = useState(null);
   const [confirmDel,  setConfirmDel]  = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(()=>{
     const u1=onSnapshot(collection(db,"devize"),snap=>{
@@ -296,7 +297,7 @@ export default function DevizeView({ user, gcalEvents }) {
 
   // Totals for current deviz
   const nrZileGlobal = current ? (current.nrZileManual ? parseInt(current.nrZileManual) : calcZile(current.dateStart,current.dateEnd)) : 1;
-  const totE = (current?.echipamente||[]).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZileGlobal||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)); },0);
+  const totE = (current?.echipamente||[]).reduce((s,r)=>{ const rz=parseFloat(r.zile||nrZileGlobal||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz); },0);
   const totM = (current?.manopera||[]).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)),0);
   const totT = (current?.transport||[]).reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
   const subtotal  = totE+totM+totT;
@@ -517,19 +518,30 @@ export default function DevizeView({ user, gcalEvents }) {
   // LIST VIEW
   if (view==="list") return (
     <div style={{padding:16,background:C.bg,minHeight:"100vh"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-        <div style={{fontSize:18,fontWeight:700,color:C.blue}}>Devize & Oferte</div>
-        <button onClick={newDeviz} style={btnP}>+ Deviz nou</button>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div>
+          <div style={{fontSize:22,fontWeight:500,color:"#111827",letterSpacing:"-0.3px"}}>Devize</div>
+          <div style={{fontSize:12,color:C.sub,marginTop:2}}>{clienti.length} clienți · {devize.length} oferte</div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          <button onClick={()=>setView("catalog")} style={{...btnS,display:"inline-flex",alignItems:"center",gap:6}}><i className="ti ti-package" style={{fontSize:14}}></i>Catalog</button>
+          <button onClick={()=>setView("clienti")} style={{...btnS,display:"inline-flex",alignItems:"center",gap:6}}><i className="ti ti-users" style={{fontSize:14}}></i>Clienți</button>
+          <button onClick={newDeviz} style={{...btnP,display:"inline-flex",alignItems:"center",gap:6,background:"#111827"}}><i className="ti ti-plus" style={{fontSize:14}}></i>Deviz nou</button>
+        </div>
       </div>
-      <div style={{display:"flex",gap:8,marginBottom:16}}>
-        <button onClick={()=>setView("catalog")} style={btnS}>📦 Catalog</button>
-        <button onClick={()=>setView("clienti")} style={btnS}>👥 Clienți ({clienti.length})</button>
+      {/* Status filters */}
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
+        <button onClick={()=>setStatusFilter("all")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="all"?"#111827":"#e5e7eb"}`,background:statusFilter==="all"?"#111827":"#fff",color:statusFilter==="all"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Toate ({devize.length})</button>
+        <button onClick={()=>setStatusFilter("draft")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="draft"?"#111827":"#e5e7eb"}`,background:statusFilter==="draft"?"#111827":"#fff",color:statusFilter==="draft"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Draft ({devize.filter(d=>(d.status||"draft")==="draft").length})</button>
+        <button onClick={()=>setStatusFilter("sent")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="sent"?"#111827":"#e5e7eb"}`,background:statusFilter==="sent"?"#111827":"#fff",color:statusFilter==="sent"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Trimis ({devize.filter(d=>d.status==="sent").length})</button>
+        <button onClick={()=>setStatusFilter("approved")} style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${statusFilter==="approved"?"#111827":"#e5e7eb"}`,background:statusFilter==="approved"?"#111827":"#fff",color:statusFilter==="approved"?"#fff":C.sub,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Aprobat ({devize.filter(d=>d.status==="approved").length})</button>
       </div>
+
       {devize.length===0&&<div style={{textAlign:"center",padding:"48px 0",color:C.sub}}><div style={{fontSize:36,marginBottom:10}}>📋</div><div style={{fontSize:14,color:C.text}}>Niciun deviz salvat</div><div style={{fontSize:12,marginTop:4}}>Apasă "+ Deviz nou" pentru a începe</div></div>}
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {devize.map(d=>{
+        {devize.filter(d=>statusFilter==="all"||(d.status||"draft")===statusFilter).map(d=>{
           const rz_e=d.echipamente||[], rz_m=d.manopera||[], rz_t=d.transport||[];
-          const tE=rz_e.reduce((s,r)=>{ const rz=parseFloat(r.zile||1); return s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*rz*getMultiplier(rz)); },0);
+          const tE=rz_e.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.cantitate||1)*parseFloat(r.zile||1)),0);
           const tM=rz_m.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.persoane||1)*parseFloat(r.zile||1)),0);
           const tT=rz_t.reduce((s,r)=>s+(parseFloat(r.pret||0)*parseFloat(r.nr||1)),0);
           const dE=parseFloat(d.discountEchip||0)/100, dM=parseFloat(d.discountManop||0)/100;
@@ -663,16 +675,7 @@ export default function DevizeView({ user, gcalEvents }) {
           <div><label style={lbl}>Data sfârșit</label><input type="date" style={inp} value={current.dateEnd||""} onChange={e=>setCurrent(p=>({...p,dateEnd:e.target.value,nrZileManual:null}))}/></div>
         </div>
 
-        {/* Nr zile override */}
-        <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",background:C.blueL,borderRadius:9,border:`1.5px solid #c0d4f0`}}>
-          <span style={{fontSize:12,color:C.blue,fontWeight:600,flexShrink:0}}>📅 Zile devizate:</span>
-          <input type="number" min="1" step="1" value={current.nrZileManual||nrZileGlobal}
-            onChange={e=>setCurrent(p=>({...p,nrZileManual:e.target.value}))}
-            style={{...numI,width:64,padding:"5px 8px",fontSize:15,fontWeight:700,border:`1.5px solid ${C.blue}`,textAlign:"center"}}/>
-          <span style={{fontSize:12,color:C.blue}}>× multiplicator <strong>{getMultiplier(nrZileGlobal)}x</strong> la echipamente</span>
-          {current.nrZileManual&&<button onClick={()=>setCurrent(p=>({...p,nrZileManual:null}))}
-            style={{fontSize:11,padding:"3px 8px",borderRadius:6,border:`1px solid ${C.border}`,background:C.card,color:C.sub,cursor:"pointer",marginLeft:"auto"}}>↩ Auto</button>}
-        </div>
+
       </div>
 
       <div style={{fontSize:10,color:"#6b7fa3",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,paddingLeft:4,marginTop:4}}>03 · Echipamente</div>
@@ -691,22 +694,21 @@ export default function DevizeView({ user, gcalEvents }) {
           ))}
         </div>}
         {/* Col headers */}
-        <div style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 50px 80px 22px",gap:4,marginBottom:4}}>
-          {["Denumire","Cant.","Preț/U EUR","Zile","Mult","Total EUR",""].map(h=>(
+        <div style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 90px 22px",gap:4,marginBottom:4}}>
+          {["Denumire","Cant.","Preț/U EUR","Zile","Total EUR",""].map(h=>(
             <div key={h} style={{fontSize:9,color:"#0057cc",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.05em",textAlign:h==="Total EUR"||h==="Preț/U EUR"?"right":"left"}}>{h}</div>
           ))}
         </div>
         {current.echipamente.map((r,i)=>{
           const p=parseFloat(r.pret||0), c2=parseFloat(r.cantitate||1);
-          const rz=parseFloat(r.zile||nrZileGlobal||1), rm=getMultiplier(rz);
-          const tot=p*c2*rz*rm;
+          const rz=parseFloat(r.zile||nrZileGlobal||1);
+          const tot=p*c2*rz;
           return (
-            <div key={r.id} style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 50px 80px 22px",gap:4,marginBottom:6,alignItems:"center"}}>
+            <div key={r.id} style={{display:"grid",gridTemplateColumns:"2fr 60px 70px 55px 90px 22px",gap:4,marginBottom:6,alignItems:"center"}}>
               <input style={inp} value={r.denumire} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],denumire:e.target.value}; return {...p2,echipamente:rows};})} placeholder="Denumire echipament"/>
               <input style={numI} type="number" step="0.01" min="0" value={r.cantitate} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],cantitate:e.target.value}; return {...p2,echipamente:rows};})} placeholder="1"/>
               <input style={numI} type="number" step="0.01" min="0" value={r.pret||""} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],pret:parseFloat(e.target.value)||0}; return {...p2,echipamente:rows};})} placeholder="0"/>
               <input style={numI} type="number" step="0.5" min="0" value={r.zile||1} onChange={e=>setCurrent(p2=>{ const rows=[...p2.echipamente]; rows[i]={...rows[i],zile:e.target.value}; return {...p2,echipamente:rows};})} placeholder="1"/>
-              <div style={{fontSize:11,color:C.sub,textAlign:"center",fontWeight:600}}>{rm}x</div>
               <div style={{fontSize:13,color:"#0057cc",fontWeight:700,textAlign:"right"}}>{fmtEUR(tot)}</div>
               <button onClick={()=>setCurrent(p2=>({...p2,echipamente:p2.echipamente.filter((_,j)=>j!==i)}))} style={{background:"none",border:"none",color:"#ccc",cursor:"pointer",fontSize:15,padding:0,lineHeight:1}}>✕</button>
             </div>
