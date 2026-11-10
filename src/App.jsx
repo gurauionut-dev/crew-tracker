@@ -5,6 +5,7 @@ import DevizeView from "./Devize";
 import RaportBusiness from "./Raport";
 import AvizeView from "./Avize";
 import OferteView from "./Oferte";
+import ParcursView from "./Parcurs";
 import { LOGO_B64 } from "./logo_igvision";
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
@@ -532,8 +533,8 @@ export default function App() {
 
   let tabs=[];
   if      (user.isViewer) tabs=[{id:"report",label:"Raport"}];
-  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"oferte",label:"Oferte"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
-  else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"avize",label:"Avize"},{id:"settings",label:"Setări"}];
+  else if (user.isChief)  tabs=[{id:"today",label:"Azi"},{id:"approve",label:"Aprobare"},{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"oferte",label:"Oferte"},{id:"avize",label:"Avize"},{id:"parcurs",label:"Parcurs"},{id:"analytics",label:"Business"},{id:"settings",label:"Setări"}];
+  else                    tabs=[{id:"today",label:"Azi"},{id:"report",label:"Raport"},{id:"avize",label:"Avize"},...(user.id==="stefan"?[{id:"parcurs",label:"Parcurs"}]:[]),{id:"settings",label:"Setări"}];
   if (user.isViewer&&!["report","devize","oferte","avize","analytics"].includes(tab)) setTab("report");
   // Viewers also get devize tab
   if (user.isViewer) tabs=[{id:"report",label:"Raport"},{id:"devize",label:"Devize"},{id:"oferte",label:"Oferte"},{id:"avize",label:"Avize"},{id:"analytics",label:"Business"}];
@@ -542,9 +543,9 @@ export default function App() {
   const shared  = {user,day,setDay:d=>{setDay(d);setSelEvent(null);},events,gcalEvents,getChecked,getApproval,getAmount,calcBonus,calcDayTotal,showToast,calLoading,calError,eventColors,saveEventColor};
   const sidebarIcons = {
     today:"ti-calendar",approve:"ti-checks",report:"ti-chart-bar",
-    devize:"ti-file-text",oferte:"ti-briefcase",avize:"ti-package",analytics:"ti-trending-up",settings:"ti-settings"
+    devize:"ti-file-text",oferte:"ti-briefcase",avize:"ti-package",parcurs:"ti-car",analytics:"ti-trending-up",settings:"ti-settings"
   };
-  const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",oferte:"Oferte",avize:"Avize",analytics:"Business",settings:"Setări"};
+  const sidebarLabels = {today:"Azi",approve:"Aprobare",report:"Raport",devize:"Devize",oferte:"Oferte",avize:"Avize",parcurs:"Parcurs",analytics:"Business",settings:"Setări"};
 
   return (
     <div style={{minHeight:"100dvh",display:"flex",background:"#f0f4fa"}}>
@@ -632,6 +633,7 @@ export default function App() {
           {tab==="devize"&&(user.isChief||user.isViewer)&&<DevizeView user={user} gcalEvents={gcalEvents}/>}
           {tab==="oferte"&&(user.isChief||user.isViewer)&&<OferteView user={user} gcalEvents={gcalEvents}/>}
           {tab==="avize"&&<AvizeView user={user} gcalEvents={gcalEvents}/>}
+          {tab==="parcurs"&&(user.id==="ionut"||user.id==="stefan")&&<ParcursView user={user} showToast={showToast} drivers={TEAM.filter(m=>!m.isViewer).map(m=>m.name)}/>}
           {tab==="analytics"&&(user.isChief||user.isViewer)&&<RaportBusiness/>}
         </div>
 
