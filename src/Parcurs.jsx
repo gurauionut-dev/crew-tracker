@@ -33,7 +33,7 @@ function printFoaie(vehicul, month, trips) {
   .badge{background:#0057cc;color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;padding:4px 12px;border-radius:4px;text-transform:uppercase;}
   .title-section{padding:6mm 14mm 4mm;border-bottom:2px solid #0057cc;}
   .t{font-size:20px;font-weight:700;color:#0057cc;letter-spacing:1px;margin-bottom:6px;}
-  .info-grid{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 14px;margin-top:6px;}
+  .info-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin-top:6px;}
   .lbl{font-weight:700;font-size:10px;color:#6b7fa3;padding:2px 0;}
   .val{font-size:11px;padding:2px 0;}
   .section{margin:5mm 14mm 0;}
@@ -56,7 +56,6 @@ function printFoaie(vehicul, month, trips) {
   <div class="title-section">
     <div class="t">FOAIE DE PARCURS — ${esc(monthLabel(month)).toUpperCase()}</div>
     <div class="info-grid">
-      <span class="lbl">UNITATE:</span><span class="val">IG Vision SRL</span>
       <span class="lbl">AUTOVEHICUL:</span><span class="val">${esc(vehicul.nr)}${vehicul.model?" · "+esc(vehicul.model):""}</span>
     </div>
   </div>
